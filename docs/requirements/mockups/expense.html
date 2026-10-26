@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SplitNest mockups: Shared expenses (WBS 2.4.3)</title>
+  <link rel="stylesheet" href="mockup.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+    <symbol id="i-delete" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></symbol>
+  </svg>
+
+  <header class="page-head">
+    <p class="eyebrow">SplitNest · PA2 mockups · Draft · WBS 2.4.3</p>
+    <h1>Shared expense screens</h1>
+    <p class="lead">Feature F03 (Must): a group member records an expense with a description, an amount, one payer and the selected participants. The split is equal, in whole VND, with a fixed remainder rule. Edit and delete follow the PA1 correction rule.</p>
+    <div class="legend" aria-label="Status chips">
+      <span>Repayment status:</span>
+      <span class="chip chip-unpaid">Unpaid</span>
+      <span class="chip chip-pending">Pending confirmation</span>
+      <span class="chip chip-settled">Settled</span>
+      <span class="chip chip-locked">Locked</span>
+    </div>
+    <nav class="toc" aria-label="Screens in this file">
+      <a href="#e1">E1 Expenses list</a>
+      <a href="#e2">E2 Add expense</a>
+      <a href="#e3">E3 Validation errors</a>
+      <a href="#e4">E4 Expense detail</a>
+      <a href="#e5">E5 Locked expense</a>
+      <a href="#e6">E6 Delete confirmation</a>
+    </nav>
+  </header>
+
+  <main class="board board-3">
+
+    <section class="card" id="e1">
+      <h2><span class="id">E1</span>Expenses list, group tab</h2>
+      <div class="phone">
+        <div class="screen">
+          <header class="appbar">
+            <a class="icon-btn" href="group-invite.html#g3" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></a>
+            <h3 class="appbar-title">Đà Lạt trip 2026</h3>
+          </header>
+          <nav class="tabs" aria-label="Group sections">
+            <a class="tab is-active" href="#e1">Expenses</a>
+            <span class="tab">Debts</span>
+            <a class="tab" href="group-invite.html#g3">Members</a>
+          </nav>
+          <div class="content">
+            <div class="box">
+              <span class="small muted">Total recorded</span>
+              <span class="big-amount">575,000 VND</span>
+              <span class="small muted">3 expenses · your share 171,250 VND</span>
+            </div>
+            <div class="list">
+              <a class="list-item" href="#e4">
+                <div class="grow">
+                  <div class="item-title">Dinner at Bánh Xèo 46A</div>
+                  <div class="item-sub">25 Oct · Paid by you</div>
+                </div>
+                <div class="align-end">
+                  <div class="amount">150,000 VND</div>
+                  <div class="item-sub">Your share 50,000</div>
+                </div>
+              </a>
+              <div class="list-item">
+                <div class="grow">
+                  <div class="item-title">Fuel for two scooters</div>
+                  <div class="item-sub">24 Oct · Paid by Huy</div>
+                </div>
+                <div class="align-end">
+                  <div class="amount">180,000 VND</div>
+                  <div class="item-sub">Your share 60,000</div>
+                </div>
+              </div>
+              <div class="list-item">
+                <div class="grow">
+                  <div class="item-title">Groceries for the homestay</div>
+                  <div class="item-sub">22 Oct · Paid by Lan</div>
+                </div>
+                <div class="align-end">
+                  <div class="amount">245,000 VND</div>
+                  <div class="item-sub">Your share 61,250</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <footer class="footer">
+            <a class="btn btn-primary" href="#e2"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Add expense</a>
+          </footer>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Newest first. Each row shows who paid and your share. A full history that includes repayment activity is F06 (Could).</li>
+        <li>Only group members can open this list.</li>
+        <li>Tap an expense to open its detail. The creator sees E4, or E5 once a repayment request exists.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="e2">
+      <h2><span class="id">E2</span>Add expense</h2>
+      <div class="phone">
+        <div class="screen">
+          <header class="appbar">
+            <a class="icon-btn" href="#e1" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></a>
+            <h3 class="appbar-title">Add expense</h3>
+          </header>
+          <div class="content">
+            <div class="field">
+              <label class="label" for="e2-desc">Description</label>
+              <input class="input" id="e2-desc" value="Coffee and cake">
+            </div>
+            <div class="field">
+              <label class="label" for="e2-amount">Amount</label>
+              <div class="input-wrap">
+                <input class="input has-suffix" id="e2-amount" inputmode="numeric" value="100,000">
+                <span class="suffix">VND</span>
+              </div>
+              <span class="help">Whole dong, greater than 0.</span>
+            </div>
+            <div class="two-up">
+              <div class="field grow">
+                <span class="label">Date</span>
+                <input class="input" value="24 Oct 2026">
+              </div>
+              <div class="field grow">
+                <span class="label">Paid by</span>
+                <div class="select">Minh (you)</div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="box-head">
+                <span class="label">Split equally between</span>
+                <a class="link small" href="#e2">Select all</a>
+              </div>
+              <div class="list">
+                <label class="list-item compact">
+                  <input class="cb" type="checkbox" checked>
+                  <span class="grow">Minh (you)</span>
+                </label>
+                <label class="list-item compact">
+                  <input class="cb" type="checkbox" checked>
+                  <span class="grow">Lan</span>
+                </label>
+                <label class="list-item compact">
+                  <input class="cb" type="checkbox" checked>
+                  <span class="grow">Huy</span>
+                </label>
+                <label class="list-item compact">
+                  <input class="cb" type="checkbox">
+                  <span class="grow">Thu</span>
+                </label>
+              </div>
+            </div>
+            <div class="preview">
+              <span class="preview-title">Split preview</span>
+              <p>100,000 ÷ 3 = 33,333 each, with 1 VND left over. The leftover goes to members in member order.</p>
+              <div class="split-line"><span>Minh<span class="tag">+1 VND</span></span><span>33,334</span></div>
+              <div class="split-line"><span>Lan</span><span>33,333</span></div>
+              <div class="split-line"><span>Huy</span><span>33,333</span></div>
+              <div class="split-total"><span>Total</span><span>100,000 VND</span></div>
+            </div>
+          </div>
+          <footer class="footer">
+            <button class="btn btn-primary" type="button">Save expense</button>
+            <a class="btn btn-ghost" href="#e1">Cancel</a>
+          </footer>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Payer and participants are chosen from this group's members only.</li>
+        <li>The payer can be a participant or not. A payer never owes themselves.</li>
+        <li>Each share is the amount divided by the participants, rounded down. Leftover dong go one at a time in member order, so the shares always add up to the total (PA1 rule).</li>
+        <li>Edit reuses this form, pre-filled, with "Save changes" and a "Delete expense" link.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="e3">
+      <h2><span class="id">E3</span>Add expense, validation errors</h2>
+      <div class="phone">
+        <div class="screen">
+          <header class="appbar">
+            <a class="icon-btn" href="#e1" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></a>
+            <h3 class="appbar-title">Add expense</h3>
+          </header>
+          <div class="content">
+            <div class="field">
+              <label class="label" for="e3-desc">Description</label>
+              <input class="input" id="e3-desc" value="Coffee and cake">
+            </div>
+            <div class="field">
+              <label class="label" for="e3-amount">Amount</label>
+              <div class="input-wrap">
+                <input class="input is-error has-suffix" id="e3-amount" inputmode="numeric" value="100.5" aria-invalid="true" aria-describedby="e3-amount-help">
+                <span class="suffix">VND</span>
+              </div>
+              <span class="help is-error" id="e3-amount-help">Enter whole dong only (no decimals), greater than 0.</span>
+            </div>
+            <div class="two-up">
+              <div class="field grow">
+                <span class="label">Date</span>
+                <input class="input" value="24 Oct 2026">
+              </div>
+              <div class="field grow">
+                <span class="label">Paid by</span>
+                <div class="select">Minh (you)</div>
+              </div>
+            </div>
+            <div class="field">
+              <span class="label">Split equally between</span>
+              <div class="list">
+                <label class="list-item compact">
+                  <input class="cb" type="checkbox">
+                  <span class="grow">Minh (you)</span>
+                </label>
+                <label class="list-item compact">
+                  <input class="cb" type="checkbox">
+                  <span class="grow">Lan</span>
+                </label>
+                <label class="list-item compact">
+                  <input class="cb" type="checkbox">
+                  <span class="grow">Huy</span>
+                </label>
+                <label class="list-item compact">
+                  <input class="cb" type="checkbox">
+                  <span class="grow">Thu</span>
+                </label>
+              </div>
+              <span class="help is-error">Select at least one participant.</span>
+            </div>
+            <div class="preview preview-empty">
+              Enter a valid amount and select participants to see the split.
+            </div>
+          </div>
+          <footer class="footer">
+            <button class="btn btn-primary" type="button">Save expense</button>
+            <a class="btn btn-ghost" href="#e1">Cancel</a>
+          </footer>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Errors appear next to the field, and nothing is saved until they are fixed.</li>
+        <li>The amount must be a positive whole number. Zero or negative amounts get the same kind of message.</li>
+        <li>At least one participant is required. The payer list only shows group members, so a non-member cannot be picked.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="e4">
+      <h2><span class="id">E4</span>Expense detail, creator</h2>
+      <div class="phone">
+        <div class="screen">
+          <header class="appbar">
+            <a class="icon-btn" href="#e1" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></a>
+            <h3 class="appbar-title">Expense</h3>
+          </header>
+          <div class="content">
+            <div>
+              <h4 class="h-screen">Dinner at Bánh Xèo 46A</h4>
+              <p class="meta">Paid by you · 25 Oct 2026 · Created by you</p>
+            </div>
+            <div class="big-amount">150,000 VND</div>
+            <section class="box">
+              <h4 class="h-section">Split between 3 people</h4>
+              <div class="list">
+                <div class="list-item">
+                  <span class="avatar av-minh">M</span>
+                  <div class="grow">
+                    <div class="line"><span class="item-title">Minh <span class="you">(you)</span></span><span class="amount">50,000 VND</span></div>
+                    <div class="status-line"><span class="chip">Payer</span></div>
+                  </div>
+                </div>
+                <div class="list-item">
+                  <span class="avatar av-lan">L</span>
+                  <div class="grow">
+                    <div class="line"><span class="item-title">Lan</span><span class="amount">50,000 VND</span></div>
+                    <div class="status-line"><span class="item-sub">Owes you</span><span class="chip chip-unpaid">Unpaid</span></div>
+                  </div>
+                </div>
+                <div class="list-item">
+                  <span class="avatar av-huy">H</span>
+                  <div class="grow">
+                    <div class="line"><span class="item-title">Huy</span><span class="amount">50,000 VND</span></div>
+                    <div class="status-line"><span class="item-sub">Owes you</span><span class="chip chip-unpaid">Unpaid</span></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <div class="notice notice-info">
+              <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+              <span>Editing and deleting are open because no repayment request exists for this expense.</span>
+            </div>
+          </div>
+          <footer class="footer">
+            <div class="btn-row">
+              <button class="btn btn-outline" type="button"><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg>Edit expense</button>
+              <button class="btn btn-danger-outline" type="button"><svg class="ic" aria-hidden="true"><use href="#i-delete"/></svg>Delete</button>
+            </div>
+          </footer>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Each participant except the payer owes their share to the payer. These debts are linked to this expense (PA1 debt records rule).</li>
+        <li>Only the creator sees Edit and Delete. Other members see the same screen without them.</li>
+        <li>Both actions stay open only while no repayment request exists for any debt of this expense.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="e5">
+      <h2><span class="id">E5</span>Expense detail, locked</h2>
+      <div class="phone">
+        <div class="screen">
+          <header class="appbar">
+            <a class="icon-btn" href="#e1" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></a>
+            <h3 class="appbar-title">Expense</h3>
+          </header>
+          <div class="content">
+            <div>
+              <h4 class="h-screen">Dinner at Bánh Xèo 46A</h4>
+              <p class="meta">Paid by you · 25 Oct 2026 · Created by you</p>
+            </div>
+            <div class="big-amount">150,000 VND</div>
+            <section class="box">
+              <h4 class="h-section">Split between 3 people</h4>
+              <div class="list">
+                <div class="list-item">
+                  <span class="avatar av-minh">M</span>
+                  <div class="grow">
+                    <div class="line"><span class="item-title">Minh <span class="you">(you)</span></span><span class="amount">50,000 VND</span></div>
+                    <div class="status-line"><span class="chip">Payer</span></div>
+                  </div>
+                </div>
+                <div class="list-item">
+                  <span class="avatar av-lan">L</span>
+                  <div class="grow">
+                    <div class="line"><span class="item-title">Lan</span><span class="amount">50,000 VND</span></div>
+                    <div class="status-line"><span class="item-sub">Owes you</span><span class="chip chip-pending">Pending confirmation</span></div>
+                  </div>
+                </div>
+                <div class="list-item">
+                  <span class="avatar av-huy">H</span>
+                  <div class="grow">
+                    <div class="line"><span class="item-title">Huy</span><span class="amount">50,000 VND</span></div>
+                    <div class="status-line"><span class="item-sub">Owes you</span><span class="chip chip-settled">Settled</span></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <div class="notice notice-warn">
+              <svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>
+              <span>Locked. A repayment request exists for a debt from this expense. It cannot be edited or deleted, even if the request is rejected later.</span>
+            </div>
+          </div>
+          <footer class="footer">
+            <div class="btn-row">
+              <button class="btn btn-outline" type="button" disabled><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg>Edit expense</button>
+              <button class="btn btn-danger-outline" type="button" disabled><svg class="ic" aria-hidden="true"><use href="#i-delete"/></svg>Delete</button>
+            </div>
+          </footer>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Same expense as E4, after Lan sent a repayment request. The lock applies once any request exists for a debt of this expense, and it stays after a rejection (PA1 correction rule).</li>
+        <li>The reason is written in the notice, not only shown by greyed-out buttons.</li>
+        <li>Confirming or rejecting a request happens in the debt screens (WBS 2.4.4), not here.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="e6">
+      <h2><span class="id">E6</span>Delete confirmation</h2>
+      <div class="phone">
+        <div class="screen">
+          <header class="appbar">
+            <a class="icon-btn" href="#e1" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></a>
+            <h3 class="appbar-title">Expense</h3>
+          </header>
+          <div class="content">
+            <div>
+              <h4 class="h-screen">Dinner at Bánh Xèo 46A</h4>
+              <p class="meta">Paid by you · 25 Oct 2026 · Created by you</p>
+            </div>
+            <div class="big-amount">150,000 VND</div>
+            <section class="box">
+              <h4 class="h-section">Split between 3 people</h4>
+              <div class="list">
+                <div class="list-item">
+                  <span class="avatar av-minh">M</span>
+                  <div class="grow">
+                    <div class="line"><span class="item-title">Minh <span class="you">(you)</span></span><span class="amount">50,000 VND</span></div>
+                    <div class="status-line"><span class="chip">Payer</span></div>
+                  </div>
+                </div>
+                <div class="list-item">
+                  <span class="avatar av-lan">L</span>
+                  <div class="grow">
+                    <div class="line"><span class="item-title">Lan</span><span class="amount">50,000 VND</span></div>
+                    <div class="status-line"><span class="item-sub">Owes you</span><span class="chip chip-unpaid">Unpaid</span></div>
+                  </div>
+                </div>
+                <div class="list-item">
+                  <span class="avatar av-huy">H</span>
+                  <div class="grow">
+                    <div class="line"><span class="item-title">Huy</span><span class="amount">50,000 VND</span></div>
+                    <div class="status-line"><span class="item-sub">Owes you</span><span class="chip chip-unpaid">Unpaid</span></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+          <footer class="footer">
+            <div class="btn-row">
+              <button class="btn btn-outline" type="button"><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg>Edit expense</button>
+              <button class="btn btn-danger-outline" type="button"><svg class="ic" aria-hidden="true"><use href="#i-delete"/></svg>Delete</button>
+            </div>
+          </footer>
+          <div class="scrim"></div>
+          <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="e6-title">
+            <h4 id="e6-title">Delete this expense?</h4>
+            <p>This removes "Dinner at Bánh Xèo 46A" and the two unpaid debts it created for Lan and Huy. This cannot be undone.</p>
+            <div class="btn-row">
+              <button class="btn btn-outline" type="button">Cancel</button>
+              <button class="btn btn-danger" type="button">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Confirmation prevents accidental deletes. It is only offered while the expense is unlocked (E4).</li>
+        <li>After deleting, the user returns to the expense list (E1).</li>
+      </ul>
+    </section>
+
+  </main>
+</body>
+</html>

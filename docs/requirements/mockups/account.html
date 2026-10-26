@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SplitNest mockups: Account (WBS 2.4.1)</title>
+  <link rel="stylesheet" href="mockup.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></symbol>
+  </svg>
+
+  <header class="page-head">
+    <p class="eyebrow">SplitNest · PA2 mockups · Draft · WBS 2.4.1</p>
+    <h1>Account screens</h1>
+    <p class="lead">Feature F01 (Must): users register, sign in, and optionally save bank name, account number and account holder name as text. No bank account is connected.</p>
+    <nav class="toc" aria-label="Screens in this file">
+      <a href="#a1">A1 Sign up</a>
+      <a href="#a2">A2 Sign in</a>
+      <a href="#a3">A3 Bank details, not saved</a>
+      <a href="#a4">A4 Bank details, saved</a>
+    </nav>
+  </header>
+
+  <main class="board">
+
+    <section class="card" id="a1">
+      <h2><span class="id">A1</span>Sign up</h2>
+      <div class="phone">
+        <div class="screen">
+          <header class="appbar">
+            <button class="icon-btn" type="button" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button>
+            <h3 class="appbar-title">Create account</h3>
+          </header>
+          <div class="content">
+            <div>
+              <h4 class="h-screen">Join SplitNest</h4>
+              <p class="muted">Create an account to start or join a private group.</p>
+            </div>
+            <div class="field">
+              <label class="label" for="a1-name">Display name</label>
+              <input class="input" id="a1-name" value="Minh">
+              <span class="help">Shown to other members of your groups.</span>
+            </div>
+            <div class="field">
+              <label class="label" for="a1-email">Email</label>
+              <input class="input" id="a1-email" type="email" value="minh.le@example.com">
+            </div>
+            <div class="field">
+              <label class="label" for="a1-pass">Password</label>
+              <input class="input" id="a1-pass" type="password" value="password123">
+            </div>
+            <div class="field">
+              <label class="label" for="a1-pass2">Confirm password</label>
+              <input class="input" id="a1-pass2" type="password" value="password123">
+            </div>
+          </div>
+          <footer class="footer">
+            <button class="btn btn-primary" type="button">Create account</button>
+            <p class="center small muted">Already have an account? <a class="link" href="#a2">Sign in</a></p>
+          </footer>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Only display name, email and password are needed. Bank details are optional and are added later on the Account screen (A3).</li>
+        <li>The display name is what other members see in their groups.</li>
+        <li>Password rules and email verification are not specified yet (see README).</li>
+      </ul>
+    </section>
+
+    <section class="card" id="a2">
+      <h2><span class="id">A2</span>Sign in, error state</h2>
+      <div class="phone">
+        <div class="screen">
+          <header class="appbar">
+            <button class="icon-btn" type="button" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button>
+            <h3 class="appbar-title">Sign in</h3>
+          </header>
+          <div class="content">
+            <div>
+              <p class="brand">SplitNest</p>
+              <h4 class="h-screen">Welcome back</h4>
+              <p class="muted">Track shared expenses and repayments in one place.</p>
+            </div>
+            <div class="notice notice-error" role="alert">
+              <svg class="ic" aria-hidden="true"><use href="#i-warn"/></svg>
+              <span>Email or password is incorrect.</span>
+            </div>
+            <div class="field">
+              <label class="label" for="a2-email">Email</label>
+              <input class="input is-error" id="a2-email" type="email" value="minh.le@example.com" aria-invalid="true">
+            </div>
+            <div class="field">
+              <label class="label" for="a2-pass">Password</label>
+              <input class="input is-error" id="a2-pass" type="password" value="wrongpass" aria-invalid="true">
+            </div>
+          </div>
+          <footer class="footer">
+            <button class="btn btn-primary" type="button">Sign in</button>
+            <p class="center small muted">New here? <a class="link" href="#a1">Create an account</a></p>
+          </footer>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Sign-in is required before joining any group (PA1 membership rule).</li>
+        <li>The error does not say which field is wrong, so it does not reveal whether an email is registered.</li>
+        <li>After signing in from an invite link, the user returns to that link (G6).</li>
+      </ul>
+    </section>
+
+    <section class="card" id="a3">
+      <h2><span class="id">A3</span>Bank details, not saved</h2>
+      <div class="phone">
+        <div class="screen">
+          <header class="appbar">
+            <button class="icon-btn" type="button" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button>
+            <h3 class="appbar-title">Account</h3>
+            <button class="text-btn" type="button">Sign out</button>
+          </header>
+          <div class="content">
+            <div class="profile">
+              <span class="avatar lg av-minh">M</span>
+              <div class="grow">
+                <div class="item-title">Minh</div>
+                <div class="item-sub">minh.le@example.com</div>
+              </div>
+            </div>
+            <section class="box">
+              <div class="box-head">
+                <h4 class="h-section">Bank details (optional)</h4>
+                <span class="chip">Not saved</span>
+              </div>
+              <div class="notice notice-neutral">
+                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                <span>Saved as plain text for reference only. SplitNest does not connect to your bank or move money.</span>
+              </div>
+              <div class="field">
+                <label class="label" for="a3-bank">Bank name</label>
+                <input class="input" id="a3-bank" placeholder="e.g. Vietcombank">
+              </div>
+              <div class="field">
+                <label class="label" for="a3-acc">Account number</label>
+                <input class="input" id="a3-acc" inputmode="numeric" placeholder="e.g. 0123456789">
+              </div>
+              <div class="field">
+                <label class="label" for="a3-holder">Account holder name</label>
+                <input class="input" id="a3-holder" placeholder="e.g. LE QUANG MINH">
+              </div>
+            </section>
+          </div>
+          <footer class="footer">
+            <button class="btn btn-primary" type="button" disabled>Save bank details</button>
+            <p class="center help">Fill in all three fields to save.</p>
+          </footer>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Three plain-text fields, saved as typed. Nothing is checked against a bank.</li>
+        <li>Save stays disabled until all three fields are filled. This is an assumption: VietQR (F05) needs all three together.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="a4">
+      <h2><span class="id">A4</span>Bank details, saved</h2>
+      <div class="phone">
+        <div class="screen">
+          <header class="appbar">
+            <button class="icon-btn" type="button" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button>
+            <h3 class="appbar-title">Account</h3>
+            <button class="text-btn" type="button">Sign out</button>
+          </header>
+          <div class="content">
+            <div class="profile">
+              <span class="avatar lg av-minh">M</span>
+              <div class="grow">
+                <div class="item-title">Minh</div>
+                <div class="item-sub">minh.le@example.com</div>
+              </div>
+            </div>
+            <section class="box">
+              <div class="box-head">
+                <h4 class="h-section">Bank details (optional)</h4>
+                <span class="chip chip-settled">Saved</span>
+              </div>
+              <dl class="kv">
+                <div>
+                  <dt>Bank name</dt>
+                  <dd>Vietcombank</dd>
+                </div>
+                <div>
+                  <dt>Account number</dt>
+                  <dd>0123456789</dd>
+                </div>
+                <div>
+                  <dt>Account holder name</dt>
+                  <dd>LE QUANG MINH</dd>
+                </div>
+              </dl>
+              <button class="btn btn-outline" type="button"><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg>Edit bank details</button>
+              <button class="btn btn-ghost-danger" type="button">Remove bank details</button>
+            </section>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Values are shown exactly as saved. VietQR generation (F05, Should) will read them later.</li>
+        <li>Edit reopens the form in A3 with the current values.</li>
+        <li>"Remove bank details" is a proposal. F01 does not mention removal.</li>
+      </ul>
+    </section>
+
+  </main>
+</body>
+</html>
