@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SplitNest website mockups: Account (WBS 2.4.1)</title>
+  <link rel="stylesheet" href="mockup.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-group" viewBox="0 0 24 24"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></symbol>
+    <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M19 2H5v20l3-2 4 2 4-2 3 2V2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V6h10v2z"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M21 7H5c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16V7zm0-4H5c-1.1 0-2 .9-2 2v2c0-1.1.9-2 2-2h16V3zm-4 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+  </svg>
+
+  <header class="page-head">
+    <p class="eyebrow">SplitNest · PA2 website mockups · WBS 2.4.1</p>
+    <h1>Account screens</h1>
+    <p class="lead">Feature F01 (Must): register, sign in, and optionally save bank details as text. These are desktop-first website mockups; the layouts adapt to smaller browser windows.</p>
+    <nav class="toc" aria-label="Screens in this file">
+      <a href="#a1">A1 Sign up</a>
+      <a href="#a2">A2 Sign in</a>
+      <a href="#a3">A3 Bank details, not saved</a>
+      <a href="#a4">A4 Bank details, saved</a>
+    </nav>
+  </header>
+
+  <main class="board">
+    <section class="card" id="a1">
+      <h2><span class="id">A1</span>Sign up</h2>
+      <div class="browser">
+        <div class="browser-bar" aria-hidden="true"><span class="browser-dots"><i></i><i></i><i></i></span><span class="address">splitnest.example/signup</span><span class="browser-more">•••</span></div>
+        <div class="website auth-layout">
+          <aside class="auth-visual">
+            <a class="app-brand" href="group-invite.html#g1"><span class="logo">SN</span>SplitNest</a>
+            <div class="auth-message">
+              <p class="auth-kicker">Shared expenses, simplified</p>
+              <h3>Shared costs.<br>Clear balances.</h3>
+              <p>One reliable place for your group’s expenses, shares and repayments.</p>
+              <div class="auth-benefits">
+                <span class="auth-benefit"><span class="check">✓</span>Private groups for the people you trust</span>
+                <span class="auth-benefit"><span class="check">✓</span>Equal splitting in whole VND</span>
+                <span class="auth-benefit"><span class="check">✓</span>Clear, confirmed repayment status</span>
+              </div>
+            </div>
+            <span class="auth-foot">Made for shared expenses in Vietnam.</span>
+          </aside>
+          <div class="auth-panel">
+            <div class="auth-card">
+              <p class="auth-switch">Already have an account? <a class="link" href="#a2">Sign in</a></p>
+              <h3>Create your account</h3>
+              <p>Start a group or join one with an invite.</p>
+              <div class="field">
+                <label class="label" for="a1-name">Display name</label>
+                <input class="input" id="a1-name" value="Minh" autocomplete="name">
+                <span class="help">Other group members will see this name.</span>
+              </div>
+              <div class="field">
+                <label class="label" for="a1-email">Email address</label>
+                <input class="input" id="a1-email" type="email" value="minh.le@example.com" autocomplete="email">
+              </div>
+              <div class="form-row">
+                <div class="field">
+                  <label class="label" for="a1-pass">Password</label>
+                  <input class="input" id="a1-pass" type="password" value="password123" autocomplete="new-password">
+                </div>
+                <div class="field">
+                  <label class="label" for="a1-pass2">Confirm password</label>
+                  <input class="input" id="a1-pass2" type="password" value="password123" autocomplete="new-password">
+                </div>
+              </div>
+              <a class="btn btn-primary btn-block" href="group-invite.html#g1">Create account</a>
+              <p class="auth-terms">Bank details are optional and can be added later.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Registration needs display name, email and password. Bank details are added later on the Account screen.</li>
+        <li>The display name is what other members see in their groups.</li>
+        <li>Password rules and email verification remain open requirements questions.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="a2">
+      <h2><span class="id">A2</span>Sign in, error state</h2>
+      <div class="browser">
+        <div class="browser-bar" aria-hidden="true"><span class="browser-dots"><i></i><i></i><i></i></span><span class="address">splitnest.example/signin</span><span class="browser-more">•••</span></div>
+        <div class="website auth-layout">
+          <aside class="auth-visual">
+            <a class="app-brand" href="group-invite.html#g1"><span class="logo">SN</span>SplitNest</a>
+            <div class="auth-message">
+              <p class="auth-kicker">Welcome back</p>
+              <h3>Every shared cost,<br>in one place.</h3>
+              <p>Pick up where you left off and see exactly who owes whom.</p>
+              <div class="auth-benefits">
+                <span class="auth-benefit"><span class="check">✓</span>Up-to-date group expense records</span>
+                <span class="auth-benefit"><span class="check">✓</span>No more searching through chat history</span>
+              </div>
+            </div>
+            <span class="auth-foot">Your groups stay private to their members.</span>
+          </aside>
+          <div class="auth-panel">
+            <div class="auth-card">
+              <p class="auth-switch">New to SplitNest? <a class="link" href="#a1">Create an account</a></p>
+              <h3>Sign in to SplitNest</h3>
+              <p>Enter your account details to continue.</p>
+              <div class="field">
+                <label class="label" for="a2-email">Email address</label>
+                <input class="input is-error" id="a2-email" type="email" value="minh.le@example.com" aria-invalid="true" aria-describedby="a2-error" autocomplete="email">
+              </div>
+              <div class="field">
+                <label class="label" for="a2-pass">Password</label>
+                <input class="input is-error" id="a2-pass" type="password" value="wrongpass" aria-invalid="true" aria-describedby="a2-error" autocomplete="current-password">
+              </div>
+              <div class="notice notice-error" id="a2-error" role="alert">
+                <svg class="ic" aria-hidden="true"><use href="#i-warn"/></svg>
+                <span>Email or password is incorrect. Please try again.</span>
+              </div>
+              <a class="btn btn-primary btn-block" href="group-invite.html#g1">Sign in</a>
+              <p class="auth-terms">Signed-in users can create and join private groups.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Sign-in is required before joining any group.</li>
+        <li>The error does not reveal which field is wrong or whether an email is registered.</li>
+        <li>After signing in from an invite, the user returns to that invitation (G6).</li>
+      </ul>
+    </section>
+
+    <section class="card" id="a3">
+      <h2><span class="id">A3</span>Bank details, not saved</h2>
+      <div class="browser">
+        <div class="browser-bar" aria-hidden="true"><span class="browser-dots"><i></i><i></i><i></i></span><span class="address">splitnest.example/account</span><span class="browser-more">•••</span></div>
+        <div class="website">
+          <header class="app-topbar">
+            <a class="app-brand" href="group-invite.html#g1"><span class="logo">SN</span>SplitNest</a>
+            <span class="topbar-context">Personal workspace</span>
+            <a class="topbar-user" href="#a3"><span class="topbar-user-copy"><strong>Minh</strong><small>minh.le@example.com</small></span><span class="avatar av-minh">M</span></a>
+          </header>
+          <div class="app-layout">
+            <aside class="sidebar">
+              <p class="nav-label">Workspace</p>
+              <nav class="nav-list" aria-label="Main navigation">
+                <a class="nav-link" href="group-invite.html#g1"><svg class="ic" aria-hidden="true"><use href="#i-group"/></svg><span>My groups</span></a>
+                <a class="nav-link" href="expense.html#e1"><svg class="ic" aria-hidden="true"><use href="#i-receipt"/></svg><span>Expenses</span></a>
+                <span class="nav-link"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg><span>Debts</span></span>
+              </nav>
+              <p class="nav-label" style="margin-top:28px">Settings</p>
+              <nav class="nav-list" aria-label="Settings navigation"><a class="nav-link is-active" href="#a3"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span>Account</span></a></nav>
+              <span class="sidebar-foot">SplitNest · Web application</span>
+            </aside>
+            <div class="app-main narrow">
+              <div class="breadcrumb"><a href="group-invite.html#g1">Home</a><span>/</span><span>Account settings</span></div>
+              <div class="main-head"><div><h3>Account settings</h3><p>Manage your profile and payment reference details.</p></div><button class="btn btn-ghost" type="button">Sign out</button></div>
+              <div class="settings-grid">
+                <section class="panel profile-card">
+                  <div class="profile"><span class="avatar lg av-minh">M</span><div><h4>Minh</h4><p>minh.le@example.com</p></div></div>
+                  <div class="profile-meta"><div class="meta-row"><span>Member since</span><strong>Oct 2026</strong></div><div class="meta-row"><span>Groups</span><strong>2 groups</strong></div><div class="meta-row"><span>Bank details</span><span class="chip">Not saved</span></div></div>
+                </section>
+                <section class="panel bank-form">
+                  <div class="panel-head"><h4>Bank details <span class="muted small">(optional)</span></h4><span class="chip">Not saved</span></div>
+                  <div class="notice notice-neutral"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span>For payment reference only. SplitNest does not connect to your bank, verify these details or move money.</span></div>
+                  <div class="field"><label class="label" for="a3-bank">Bank name</label><input class="input" id="a3-bank" placeholder="e.g. Vietcombank"></div>
+                  <div class="form-row">
+                    <div class="field"><label class="label" for="a3-acc">Account number</label><input class="input" id="a3-acc" inputmode="numeric" placeholder="e.g. 0123456789"></div>
+                    <div class="field"><label class="label" for="a3-holder">Account holder name</label><input class="input" id="a3-holder" placeholder="e.g. LE QUANG MINH"></div>
+                  </div>
+                  <div class="form-actions"><span class="help" style="margin-right:auto">Fill in all three fields to save.</span><button class="btn btn-primary" type="button" disabled>Save bank details</button></div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Three plain-text fields are stored as entered; no bank account is connected.</li>
+        <li>Save stays disabled until all three fields are filled because VietQR needs the complete set.</li>
+        <li>The responsive sidebar collapses without changing the account workflow.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="a4">
+      <h2><span class="id">A4</span>Bank details, saved</h2>
+      <div class="browser">
+        <div class="browser-bar" aria-hidden="true"><span class="browser-dots"><i></i><i></i><i></i></span><span class="address">splitnest.example/account</span><span class="browser-more">•••</span></div>
+        <div class="website">
+          <header class="app-topbar">
+            <a class="app-brand" href="group-invite.html#g1"><span class="logo">SN</span>SplitNest</a><span class="topbar-context">Personal workspace</span>
+            <a class="topbar-user" href="#a4"><span class="topbar-user-copy"><strong>Minh</strong><small>minh.le@example.com</small></span><span class="avatar av-minh">M</span></a>
+          </header>
+          <div class="app-layout">
+            <aside class="sidebar">
+              <p class="nav-label">Workspace</p>
+              <nav class="nav-list" aria-label="Main navigation"><a class="nav-link" href="group-invite.html#g1"><svg class="ic" aria-hidden="true"><use href="#i-group"/></svg><span>My groups</span></a><a class="nav-link" href="expense.html#e1"><svg class="ic" aria-hidden="true"><use href="#i-receipt"/></svg><span>Expenses</span></a><span class="nav-link"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg><span>Debts</span></span></nav>
+              <p class="nav-label" style="margin-top:28px">Settings</p>
+              <nav class="nav-list" aria-label="Settings navigation"><a class="nav-link is-active" href="#a4"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span>Account</span></a></nav>
+              <span class="sidebar-foot">SplitNest · Web application</span>
+            </aside>
+            <div class="app-main narrow">
+              <div class="breadcrumb"><a href="group-invite.html#g1">Home</a><span>/</span><span>Account settings</span></div>
+              <div class="main-head"><div><h3>Account settings</h3><p>Manage your profile and payment reference details.</p></div><button class="btn btn-ghost" type="button">Sign out</button></div>
+              <div class="settings-grid">
+                <section class="panel profile-card">
+                  <div class="profile"><span class="avatar lg av-minh">M</span><div><h4>Minh</h4><p>minh.le@example.com</p></div></div>
+                  <div class="profile-meta"><div class="meta-row"><span>Member since</span><strong>Oct 2026</strong></div><div class="meta-row"><span>Groups</span><strong>2 groups</strong></div><div class="meta-row"><span>Bank details</span><span class="chip chip-settled">Saved</span></div></div>
+                </section>
+                <section class="panel">
+                  <div class="panel-head"><h4>Bank details <span class="muted small">(optional)</span></h4><span class="chip chip-settled">Saved</span></div>
+                  <dl class="kv"><div><dt>Bank name</dt><dd>Vietcombank</dd></div><div><dt>Account number</dt><dd>0123456789</dd></div><div><dt>Account holder name</dt><dd>LE QUANG MINH</dd></div></dl>
+                  <div class="notice notice-info"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span>These details can be used to generate a VietQR code later. Transfers still happen outside SplitNest.</span></div>
+                  <div class="form-actions"><button class="btn btn-ghost-danger" style="margin-right:auto" type="button">Remove bank details</button><button class="btn btn-outline" type="button"><svg class="ic" aria-hidden="true"><use href="#i-edit"/></svg>Edit bank details</button></div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>Saved values remain visible as text and can support VietQR generation (F05, Should).</li>
+        <li>Edit reopens the form in A3 with current values.</li>
+        <li>Remove is a proposed interaction; F01 does not explicitly require removal.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
