@@ -3,289 +3,136 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SplitNest mockups: Groups and invitations (WBS 2.4.2)</title>
+  <title>SplitNest website mockups: Groups and invitations (WBS 2.4.2)</title>
   <link rel="stylesheet" href="mockup.css">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <symbol id="i-back" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></symbol>
+    <symbol id="i-group" viewBox="0 0 24 24"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></symbol>
+    <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M19 2H5v20l3-2 4 2 4-2 3 2V2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V6h10v2z"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M21 7H5c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16V7zm0-4H5c-1.1 0-2 .9-2 2v2c0-1.1.9-2 2-2h16V3zm-4 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
-    <symbol id="i-group" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></symbol>
     <symbol id="i-copy" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></symbol>
     <symbol id="i-share" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></symbol>
     <symbol id="i-warn" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></symbol>
-    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></symbol>
   </svg>
 
   <header class="page-head">
-    <p class="eyebrow">SplitNest · PA2 mockups · Draft · WBS 2.4.2</p>
+    <p class="eyebrow">SplitNest · PA2 website mockups · WBS 2.4.2</p>
     <h1>Group and invite screens</h1>
-    <p class="lead">Feature F02 (Must): users create private groups, see the members, and invite registered users with a join link or a QR code that contains the same link. The phone camera opens the QR code, so SplitNest has no in-app scanner.</p>
+    <p class="lead">Feature F02 (Must): create private groups, view membership, and invite registered users through a join link or QR code. The QR opens the same web invitation; no native app or in-app scanner is needed.</p>
     <nav class="toc" aria-label="Screens in this file">
-      <a href="#g1">G1 My groups</a>
-      <a href="#g2">G2 Create group</a>
-      <a href="#g3">G3 Group members</a>
-      <a href="#g4">G4 Invite, link and QR</a>
-      <a href="#g5">G5 Join, signed in</a>
-      <a href="#g6">G6 Join, signed out</a>
-      <a href="#g7">G7 Invalid link</a>
+      <a href="#g1">G1 My groups</a><a href="#g2">G2 Create group</a><a href="#g3">G3 Group members</a><a href="#g4">G4 Invite, link and QR</a><a href="#g5">G5 Join, signed in</a><a href="#g6">G6 Join, signed out</a><a href="#g7">G7 Invalid link</a>
     </nav>
   </header>
 
   <main class="board">
-
     <section class="card" id="g1">
       <h2><span class="id">G1</span>My groups (home)</h2>
-      <div class="phone">
-        <div class="screen">
-          <header class="appbar">
-            <h3 class="appbar-title">My groups</h3>
-            <a class="avatar av-minh" href="account.html#a4" aria-label="Account">M</a>
-          </header>
-          <div class="content">
-            <div class="list">
-              <a class="list-item" href="#g3">
-                <span class="avatar group">Đ</span>
-                <div class="grow">
-                  <div class="item-title">Đà Lạt trip 2026</div>
-                  <div class="item-sub">4 members</div>
-                </div>
-                <span class="chip chip-organizer">Organizer</span>
-                <svg class="ic chev" aria-hidden="true"><use href="#i-chevron"/></svg>
-              </a>
-              <a class="list-item" href="#g3">
-                <span class="avatar group">P</span>
-                <div class="grow">
-                  <div class="item-title">Phòng 3B</div>
-                  <div class="item-sub">3 members</div>
-                </div>
-                <span class="chip">Member</span>
-                <svg class="ic chev" aria-hidden="true"><use href="#i-chevron"/></svg>
-              </a>
+      <div class="browser">
+        <div class="browser-bar" aria-hidden="true"><span class="browser-dots"><i></i><i></i><i></i></span><span class="address">splitnest.example/groups</span><span class="browser-more">•••</span></div>
+        <div class="website">
+          <header class="app-topbar"><a class="app-brand" href="#g1"><span class="logo">SN</span>SplitNest</a><span class="topbar-context">Personal workspace</span><a class="topbar-user" href="account.html#a4"><span class="topbar-user-copy"><strong>Minh</strong><small>minh.le@example.com</small></span><span class="avatar av-minh">M</span></a></header>
+          <div class="app-layout">
+            <aside class="sidebar"><p class="nav-label">Workspace</p><nav class="nav-list" aria-label="Main navigation"><a class="nav-link is-active" href="#g1"><svg class="ic" aria-hidden="true"><use href="#i-group"/></svg><span>My groups</span></a><a class="nav-link" href="expense.html#e1"><svg class="ic" aria-hidden="true"><use href="#i-receipt"/></svg><span>Expenses</span></a><span class="nav-link"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg><span>Debts</span></span></nav><p class="nav-label" style="margin-top:28px">Settings</p><nav class="nav-list" aria-label="Settings navigation"><a class="nav-link" href="account.html#a4"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span>Account</span></a></nav><span class="sidebar-foot">SplitNest · Web application</span></aside>
+            <div class="app-main">
+              <div class="main-head"><div><h3>My groups</h3><p>Good to see you, Minh! Here are your shared spaces.</p></div><a class="btn btn-primary" href="#g2"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Create group</a></div>
+              <div class="stats"><div class="stat"><span class="stat-label">Active groups</span><strong class="stat-value">2</strong></div><div class="stat"><span class="stat-label">Total members</span><strong class="stat-value">7</strong></div><div class="stat"><span class="stat-label">Currency</span><strong class="stat-value">VND</strong></div></div>
+              <div class="group-grid">
+                <a class="group-card" href="#g3"><div class="group-card-head"><span class="avatar group">Đ</span><div class="grow"><h4>Đà Lạt trip 2026</h4><p>4 members · 3 expenses</p></div><span class="chip chip-organizer">Organizer</span></div><div class="group-card-foot"><div class="avatar-stack" aria-label="Minh, Lan, Huy and Thu"><span class="avatar av-minh">M</span><span class="avatar av-lan">L</span><span class="avatar av-huy">H</span><span class="avatar av-thu">T</span></div><span class="amount">575,000 VND</span></div></a>
+                <a class="group-card" href="#g3"><div class="group-card-head"><span class="avatar group">P</span><div class="grow"><h4>Phòng 3B</h4><p>3 members · 5 expenses</p></div><span class="chip">Member</span></div><div class="group-card-foot"><div class="avatar-stack" aria-label="Minh, Lan and Huy"><span class="avatar av-minh">M</span><span class="avatar av-lan">L</span><span class="avatar av-huy">H</span></div><span class="amount">1,240,000 VND</span></div></a>
+              </div>
             </div>
           </div>
-          <footer class="footer">
-            <a class="btn btn-primary" href="#g2"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Create group</a>
-          </footer>
         </div>
       </div>
-      <ul class="notes">
-        <li>Lists only the groups the user belongs to. Groups are private.</li>
-        <li>Empty state, not drawn: "No groups yet. Create one, or open an invite link to join one."</li>
-        <li>Organizer means the creator of the group. It is a role inside the group, not a separate account type.</li>
-      </ul>
+      <ul class="notes"><li>Lists only groups the signed-in user belongs to; groups are private.</li><li>Empty state: “No groups yet. Create one, or open an invite link to join one.”</li><li>Organizer identifies the group creator, not a separate account type.</li></ul>
     </section>
 
     <section class="card" id="g2">
       <h2><span class="id">G2</span>Create group</h2>
-      <div class="phone">
-        <div class="screen">
-          <header class="appbar">
-            <a class="icon-btn" href="#g1" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></a>
-            <h3 class="appbar-title">New group</h3>
-          </header>
-          <div class="content">
-            <div class="field">
-              <label class="label" for="g2-name">Group name</label>
-              <input class="input" id="g2-name" value="Đà Lạt trip 2026">
-              <span class="help">Only members of this group can see it.</span>
-            </div>
-            <div class="box">
-              <div class="box-head">
-                <span class="label">Currency</span>
-                <strong>VND only</strong>
+      <div class="browser">
+        <div class="browser-bar" aria-hidden="true"><span class="browser-dots"><i></i><i></i><i></i></span><span class="address">splitnest.example/groups/new</span><span class="browser-more">•••</span></div>
+        <div class="website">
+          <header class="app-topbar"><a class="app-brand" href="#g1"><span class="logo">SN</span>SplitNest</a><span class="topbar-context">Personal workspace</span><a class="topbar-user" href="account.html#a4"><span class="topbar-user-copy"><strong>Minh</strong><small>minh.le@example.com</small></span><span class="avatar av-minh">M</span></a></header>
+          <div class="app-layout">
+            <aside class="sidebar"><p class="nav-label">Workspace</p><nav class="nav-list" aria-label="Main navigation"><a class="nav-link is-active" href="#g1"><svg class="ic" aria-hidden="true"><use href="#i-group"/></svg><span>My groups</span></a><a class="nav-link" href="expense.html#e1"><svg class="ic" aria-hidden="true"><use href="#i-receipt"/></svg><span>Expenses</span></a><span class="nav-link"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg><span>Debts</span></span></nav><p class="nav-label" style="margin-top:28px">Settings</p><nav class="nav-list" aria-label="Settings navigation"><a class="nav-link" href="account.html#a4"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span>Account</span></a></nav><span class="sidebar-foot">SplitNest · Web application</span></aside>
+            <div class="app-main narrow">
+              <div class="breadcrumb"><a href="#g1">My groups</a><span>/</span><span>New group</span></div>
+              <div class="main-head"><div><h3>Create a private group</h3><p>Set up a shared space for your next trip, home or activity.</p></div></div>
+              <div class="form-layout">
+                <section class="panel"><h4 class="panel-title">Group details</h4><p class="panel-subtitle">You can invite other members after creating the group.</p><div class="field"><label class="label" for="g2-name">Group name</label><input class="input" id="g2-name" value="Đà Lạt trip 2026"><span class="help">Only members of this group can see its information.</span></div><div class="field"><span class="label">Currency</span><div class="select">VND — Vietnamese đồng</div><span class="help">Whole VND only in this release. Other currencies are out of scope.</span></div><div class="notice notice-info"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span>You will become the organizer and first member.</span></div><div class="form-actions"><a class="btn btn-ghost" href="#g1">Cancel</a><a class="btn btn-primary" href="#g3">Create group</a></div></section>
+                <aside class="panel"><h4 class="panel-title">What happens next?</h4><ol class="steps"><li class="step"><span class="step-number">1</span><div><strong>Create your private space</strong><p>Your group is visible only to its members.</p></div></li><li class="step"><span class="step-number">2</span><div><strong>Invite your group</strong><p>Share a join link or let friends scan its QR code.</p></div></li><li class="step"><span class="step-number">3</span><div><strong>Record shared expenses</strong><p>Select a payer and split costs between members.</p></div></li></ol></aside>
               </div>
-              <p class="small muted flush">Amounts are whole dong. Other currencies are not supported in this version.</p>
-            </div>
-            <div class="notice notice-info">
-              <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
-              <span>You become the organizer and the first member of this group.</span>
             </div>
           </div>
-          <footer class="footer">
-            <a class="btn btn-primary" href="#g3">Create group</a>
-          </footer>
         </div>
       </div>
-      <ul class="notes">
-        <li>Name is required. A length limit is not specified yet.</li>
-        <li>The creator becomes the organizer and first member. No other roles are set at creation.</li>
-        <li>Currency is fixed to whole VND in this version (PA1 out-of-scope list).</li>
-      </ul>
+      <ul class="notes"><li>Group name is required; a length limit is not specified yet.</li><li>The creator becomes organizer and first member automatically.</li><li>Currency is fixed to whole VND in the first version.</li></ul>
     </section>
 
     <section class="card" id="g3">
       <h2><span class="id">G3</span>Group, members tab</h2>
-      <div class="phone">
-        <div class="screen">
-          <header class="appbar">
-            <a class="icon-btn" href="#g1" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></a>
-            <h3 class="appbar-title">Đà Lạt trip 2026</h3>
-          </header>
-          <nav class="tabs" aria-label="Group sections">
-            <a class="tab" href="expense.html#e1">Expenses</a>
-            <span class="tab">Debts</span>
-            <span class="tab is-active">Members</span>
-          </nav>
-          <div class="content">
-            <a class="btn btn-outline" href="#g4"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Invite members</a>
-            <div class="section-label">Members (4)</div>
-            <div class="list">
-              <div class="list-item">
-                <span class="avatar av-minh">M</span>
-                <div class="grow"><div class="item-title">Minh <span class="you">(you)</span></div></div>
-                <span class="chip chip-organizer">Organizer</span>
-              </div>
-              <div class="list-item">
-                <span class="avatar av-lan">L</span>
-                <div class="grow"><div class="item-title">Lan</div></div>
-                <span class="chip">Member</span>
-              </div>
-              <div class="list-item">
-                <span class="avatar av-huy">H</span>
-                <div class="grow"><div class="item-title">Huy</div></div>
-                <span class="chip">Member</span>
-              </div>
-              <div class="list-item">
-                <span class="avatar av-thu">T</span>
-                <div class="grow"><div class="item-title">Thu</div></div>
-                <span class="chip">Member</span>
+      <div class="browser">
+        <div class="browser-bar" aria-hidden="true"><span class="browser-dots"><i></i><i></i><i></i></span><span class="address">splitnest.example/groups/dalat-2026/members</span><span class="browser-more">•••</span></div>
+        <div class="website">
+          <header class="app-topbar"><a class="app-brand" href="#g1"><span class="logo">SN</span>SplitNest</a><span class="topbar-context">Personal workspace</span><a class="topbar-user" href="account.html#a4"><span class="topbar-user-copy"><strong>Minh</strong><small>minh.le@example.com</small></span><span class="avatar av-minh">M</span></a></header>
+          <div class="app-layout">
+            <aside class="sidebar"><p class="nav-label">Workspace</p><nav class="nav-list" aria-label="Main navigation"><a class="nav-link is-active" href="#g1"><svg class="ic" aria-hidden="true"><use href="#i-group"/></svg><span>My groups</span></a><a class="nav-link" href="expense.html#e1"><svg class="ic" aria-hidden="true"><use href="#i-receipt"/></svg><span>Expenses</span></a><span class="nav-link"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg><span>Debts</span></span></nav><p class="nav-label" style="margin-top:28px">Settings</p><nav class="nav-list" aria-label="Settings navigation"><a class="nav-link" href="account.html#a4"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span>Account</span></a></nav><span class="sidebar-foot">SplitNest · Web application</span></aside>
+            <div class="app-main">
+              <div class="breadcrumb"><a href="#g1">My groups</a><span>/</span><span>Đà Lạt trip 2026</span></div>
+              <div class="main-head"><div><h3>Đà Lạt trip 2026</h3><p>Private group · 4 members</p></div><a class="btn btn-primary" href="#g4"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Invite members</a></div>
+              <nav class="tabs" aria-label="Group sections"><a class="tab" href="expense.html#e1">Expenses</a><span class="tab">Debts</span><a class="tab is-active" href="#g3">Members</a></nav>
+              <div class="detail-grid">
+                <section class="table-wrap"><table><thead><tr><th>Member</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead><tbody><tr><td><div class="profile"><span class="avatar av-minh">M</span><span class="item-title">Minh <span class="you">(you)</span></span></div></td><td>minh.le@example.com</td><td><span class="chip chip-organizer">Organizer</span></td><td>20 Oct 2026</td></tr><tr><td><div class="profile"><span class="avatar av-lan">L</span><span class="item-title">Lan</span></div></td><td>lan@example.com</td><td><span class="chip">Member</span></td><td>20 Oct 2026</td></tr><tr><td><div class="profile"><span class="avatar av-huy">H</span><span class="item-title">Huy</span></div></td><td>huy@example.com</td><td><span class="chip">Member</span></td><td>21 Oct 2026</td></tr><tr><td><div class="profile"><span class="avatar av-thu">T</span><span class="item-title">Thu</span></div></td><td>thu@example.com</td><td><span class="chip">Member</span></td><td>21 Oct 2026</td></tr></tbody></table></section>
+                <aside class="panel group-summary"><h4 class="panel-title">Group overview</h4><div><span class="small muted">Total recorded</span><div class="big-amount">575,000 <span class="small">VND</span></div></div><div class="summary-row"><span>Shared expenses</span><strong>3</strong></div><div class="summary-row"><span>Created by</span><strong>Minh</strong></div><div class="summary-row"><span>Created on</span><strong>20 Oct 2026</strong></div><div class="notice notice-neutral"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span>Only group members can view this information.</span></div></aside>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <ul class="notes">
-        <li>Only members can see this list.</li>
-        <li>No Leave button: leaving a group is not supported in v1 (PA1 group lifecycle rule). Removing members is not drawn either, because PA1 does not say whether members without debts can be removed (see README).</li>
-        <li>The Debts tab belongs to the debt screens (WBS 2.4.4), which are not in this set.</li>
-      </ul>
+      <ul class="notes"><li>Only members can see the group and its member list.</li><li>Leaving a group is not supported in v1; member removal remains an open requirements question.</li><li>The Debts tab belongs to WBS 2.4.4 and is intentionally not mocked here.</li></ul>
     </section>
 
     <section class="card" id="g4">
       <h2><span class="id">G4</span>Invite members, link and QR</h2>
-      <div class="phone">
-        <div class="screen">
-          <header class="appbar">
-            <a class="icon-btn" href="#g3" aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></a>
-            <h3 class="appbar-title">Invite members</h3>
-          </header>
-          <div class="content">
-            <p class="muted flush">Share this link or QR code with registered SplitNest users who should join Đà Lạt trip 2026.</p>
-            <div class="qr-card">
-              <svg role="img" aria-label="QR code for the invite link" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" class="qr"><path class="qrline" stroke="#1d2a33" d="M4 4.5h7m2 0h1m3 0h1m1 0h1m1 0h1m4 0h7m-29 1h1m5 0h1m1 0h2m1 0h2m3 0h1m1 0h1m1 0h1m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h3m3 0h2m2 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m1 0h3m1 0h1m1 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h4m4 0h4m1 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m5 0h1m7 0h1m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-21 1h1m1 0h1m1 0h1m1 0h1m3 0h1m-19 1h1m5 0h1m1 0h3m2 0h1m1 0h3m3 0h2m2 0h3m-26 1h1m4 0h1m2 0h2m3 0h1m2 0h2m1 0h1m1 0h2m1 0h2m-26 1h2m1 0h5m1 0h3m1 0h2m6 0h2m-25 1h2m3 0h1m1 0h1m2 0h1m4 0h1m9 0h1m-25 1h3m2 0h1m3 0h1m1 0h4m2 0h1m3 0h2m4 0h1m-28 1h2m1 0h1m2 0h1m1 0h3m3 0h1m1 0h4m1 0h3m2 0h2m-27 1h1m3 0h3m2 0h1m3 0h3m2 0h1m1 0h1m1 0h3m-27 1h4m4 0h1m1 0h2m2 0h3m6 0h1m2 0h1m1 0h1m-29 1h3m3 0h1m1 0h1m1 0h1m6 0h1m7 0h2m-27 1h1m1 0h1m1 0h1m3 0h1m3 0h2m1 0h6m1 0h3m1 0h3m-29 1h10m5 0h2m1 0h3m1 0h4m2 0h1m-29 1h1m2 0h2m2 0h1m2 0h2m1 0h1m4 0h4m2 0h1m-25 1h1m2 0h1m1 0h3m4 0h1m1 0h1m1 0h2m1 0h6m1 0h3m-21 1h1m1 0h3m1 0h1m2 0h2m1 0h1m3 0h2m-26 1h7m2 0h4m2 0h3m1 0h2m1 0h1m1 0h3m-27 1h1m5 0h1m2 0h1m4 0h3m3 0h1m3 0h1m2 0h2m-29 1h1m1 0h3m1 0h1m2 0h2m2 0h2m1 0h1m2 0h7m2 0h1m-29 1h1m1 0h3m1 0h1m2 0h1m1 0h1m1 0h3m1 0h2m2 0h1m1 0h1m1 0h2m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h2m2 0h1m1 0h1m2 0h2m2 0h6m-28 1h1m5 0h1m4 0h5m3 0h1m2 0h2m1 0h2m1 0h1m-29 1h7m1 0h2m1 0h1m2 0h1m2 0h1m1 0h1m2 0h1m1 0h3"/></svg>
-              <p class="small muted center flush">Scan with the phone camera to open the join page.</p>
+      <div class="browser">
+        <div class="browser-bar" aria-hidden="true"><span class="browser-dots"><i></i><i></i><i></i></span><span class="address">splitnest.example/groups/dalat-2026/invite</span><span class="browser-more">•••</span></div>
+        <div class="website modal-page">
+          <header class="app-topbar"><a class="app-brand" href="#g1"><span class="logo">SN</span>SplitNest</a><span class="topbar-context">Personal workspace</span><a class="topbar-user" href="account.html#a4"><span class="topbar-user-copy"><strong>Minh</strong><small>minh.le@example.com</small></span><span class="avatar av-minh">M</span></a></header>
+          <div class="app-layout"><aside class="sidebar"><p class="nav-label">Workspace</p><nav class="nav-list" aria-label="Main navigation"><a class="nav-link is-active" href="#g1"><svg class="ic" aria-hidden="true"><use href="#i-group"/></svg><span>My groups</span></a><a class="nav-link" href="expense.html#e1"><svg class="ic" aria-hidden="true"><use href="#i-receipt"/></svg><span>Expenses</span></a><span class="nav-link"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg><span>Debts</span></span></nav></aside><div class="app-main"><div class="breadcrumb"><a href="#g1">My groups</a><span>/</span><span>Đà Lạt trip 2026</span></div><div class="main-head"><div><h3>Đà Lạt trip 2026</h3><p>Private group · 4 members</p></div></div><nav class="tabs" aria-label="Group sections"><span class="tab">Expenses</span><span class="tab">Debts</span><span class="tab is-active">Members</span></nav><div class="panel"><h4 class="panel-title">Members (4)</h4><p class="muted">Minh, Lan, Huy and Thu</p></div></div></div>
+          <div class="modal-scrim" aria-hidden="true"></div>
+          <section class="modal" role="dialog" aria-modal="true" aria-labelledby="g4-title">
+            <div class="modal-head"><div><h3 id="g4-title">Invite members</h3><p>Share this invitation for Đà Lạt trip 2026.</p></div><a class="close" href="#g3" aria-label="Close invitation">✕</a></div>
+            <div class="invite-grid">
+              <div class="qr-card"><svg role="img" aria-label="QR code for https://splitnest.example/join/Xk3p9Qa2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" class="qr"><rect width="37" height="37" fill="#fff"/><path fill="none" stroke="#172a32" stroke-width="1" d="M4 4.5h7m2 0h1m3 0h1m1 0h1m1 0h1m4 0h7m-29 1h1m5 0h1m1 0h2m1 0h2m3 0h1m1 0h1m1 0h1m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h3m3 0h2m2 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m1 0h3m1 0h1m1 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h4m4 0h4m1 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m5 0h1m7 0h1m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-21 1h1m1 0h1m1 0h1m1 0h1m3 0h1m-19 1h1m5 0h1m1 0h3m2 0h1m1 0h3m3 0h2m2 0h3m-26 1h1m4 0h1m2 0h2m3 0h1m2 0h2m1 0h1m1 0h2m1 0h2m-26 1h2m1 0h5m1 0h3m1 0h2m6 0h2m-25 1h2m3 0h1m1 0h1m2 0h1m4 0h1m9 0h1m-25 1h3m2 0h1m3 0h1m1 0h4m2 0h1m3 0h2m4 0h1m-28 1h2m1 0h1m2 0h1m1 0h3m3 0h1m1 0h4m1 0h3m2 0h2m-27 1h1m3 0h3m2 0h1m3 0h3m2 0h1m1 0h1m1 0h1m1 0h3m-27 1h4m4 0h1m1 0h2m2 0h3m6 0h1m2 0h1m1 0h1m-29 1h3m3 0h1m1 0h1m1 0h1m6 0h1m7 0h2m-27 1h1m1 0h1m1 0h1m3 0h1m3 0h2m1 0h6m1 0h3m1 0h3m-29 1h10m5 0h2m1 0h3m1 0h4m2 0h1m-29 1h1m2 0h2m2 0h1m2 0h2m1 0h1m4 0h4m2 0h1m-25 1h1m2 0h1m1 0h3m4 0h1m1 0h1m2 0h1m1 0h6m1 0h3m-21 1h1m1 0h3m1 0h1m2 0h1m3 0h2m-26 1h7m2 0h4m2 0h3m1 0h2m1 0h1m1 0h3m-27 1h1m5 0h1m1 0h1m2 0h1m4 0h3m3 0h1m3 0h1m2 0h2m-29 1h1m1 0h3m1 0h1m2 0h2m2 0h2m1 0h1m2 0h1m2 0h7m2 0h1m-29 1h1m1 0h3m1 0h1m2 0h1m1 0h3m1 0h2m1 0h1m1 0h2m1 0h6m-28 1h1m5 0h1m4 0h5m3 0h1m2 0h2m1 0h2m1 0h1m-29 1h7m1 0h2m1 0h1m1 0h1m2 0h1m1 0h1m2 0h1m1 0h1m1 0h3"/></svg><p>Scan with a phone camera<br>to open the web join page.</p></div>
+              <div><span class="label">Invite link</span><div class="link-box" style="margin-top:7px"><span class="link-text">https://splitnest.example/join/Xk3p9Qa2</span><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg></div><div class="invite-actions"><button class="btn btn-outline" type="button"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg>Copy link</button><button class="btn btn-primary" type="button"><svg class="ic" aria-hidden="true"><use href="#i-share"/></svg>Share</button></div><div class="notice notice-warn"><svg class="ic" aria-hidden="true"><use href="#i-warn"/></svg><span>Anyone who signs in with this link can join. Share it only with people you trust.</span></div></div>
             </div>
-            <div class="field">
-              <span class="label">Invite link</span>
-              <div class="link-box">
-                <span class="link-text">https://splitnest.example/join/Xk3p9Qa2</span>
-                <svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg>
-              </div>
-            </div>
-            <div class="notice notice-warn">
-              <svg class="ic" aria-hidden="true"><use href="#i-warn"/></svg>
-              <span>Anyone who signs in with this link can join the group. Share it only with people you trust.</span>
-            </div>
-          </div>
-          <footer class="footer">
-            <div class="btn-row">
-              <button class="btn btn-outline" type="button"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg>Copy link</button>
-              <button class="btn btn-primary" type="button"><svg class="ic" aria-hidden="true"><use href="#i-share"/></svg>Share</button>
-            </div>
-          </footer>
+          </section>
         </div>
       </div>
-      <ul class="notes">
-        <li>The QR code encodes the same link. The phone camera opens it, so no in-app scanner is needed (PA1).</li>
-        <li>The link and QR code here are samples. The backend generates the real ones (WBS 3.2.3).</li>
-        <li>Revoking or regenerating the link is not specified (see README).</li>
-      </ul>
+      <ul class="notes"><li>The QR contains exactly the same invite link; the device camera opens it in a browser.</li><li>The backend generates real links and QR codes (WBS 3.2.3); this sample domain does not resolve.</li><li>Link expiry, revocation and regeneration are not defined yet.</li></ul>
     </section>
 
     <section class="card" id="g5">
       <h2><span class="id">G5</span>Join from link, signed in</h2>
-      <div class="phone">
-        <div class="screen">
-          <header class="appbar">
-            <h3 class="appbar-title">Group invitation</h3>
-          </header>
-          <div class="content center-col">
-            <span class="hero-icon"><svg class="ic" aria-hidden="true"><use href="#i-group"/></svg></span>
-            <h4 class="h-screen">Join this group?</h4>
-            <p class="muted flush">You have been invited to a SplitNest group. After you join, you can see its members and expenses.</p>
-            <div class="box left">
-              <div class="section-label">Signed in as</div>
-              <div class="profile">
-                <span class="avatar av-minh">M</span>
-                <div class="grow">
-                  <div class="item-title">Minh</div>
-                  <div class="item-sub">minh.le@example.com</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <footer class="footer">
-            <a class="btn btn-primary" href="#g3">Join group</a>
-            <a class="btn btn-ghost" href="#g1">Not now</a>
-          </footer>
-        </div>
-      </div>
-      <ul class="notes">
-        <li>The group name and member list stay hidden until the user joins, because only members can view group information (PA1). See README.</li>
-        <li>If the user is already a member, skip this page and open the group with "You are already in this group."</li>
-        <li>After joining, the user lands in the group (G3).</li>
-      </ul>
+      <div class="browser"><div class="browser-bar" aria-hidden="true"><span class="browser-dots"><i></i><i></i><i></i></span><span class="address">splitnest.example/join/Xk3p9Qa2</span><span class="browser-more">•••</span></div><div class="website join-page"><a class="app-brand join-brand" href="#g1"><span class="logo">SN</span>SplitNest</a><div class="join-wrap"><section class="join-card"><span class="hero-icon"><svg class="ic" aria-hidden="true"><use href="#i-group"/></svg></span><h3>Join this group?</h3><p>You have been invited to a private SplitNest group. After joining, you can view its members and expenses.</p><span class="signed-label">Signed in as</span><div class="profile"><span class="avatar av-minh">M</span><div><div class="item-title">Minh</div><div class="item-sub">minh.le@example.com</div></div></div><a class="btn btn-primary btn-block" href="#g3">Join group</a><a class="btn btn-ghost btn-block" href="#g1">Not now</a><p class="join-foot">Group details become visible after you join.</p></section></div></div></div>
+      <ul class="notes"><li>Group name and members stay hidden until joining because only members can view group information.</li><li>Existing members go directly to the group with “You are already in this group.”</li><li>After joining, the website opens the group (G3).</li></ul>
     </section>
 
     <section class="card" id="g6">
       <h2><span class="id">G6</span>Join from link, signed out</h2>
-      <div class="phone">
-        <div class="screen">
-          <header class="appbar">
-            <h3 class="appbar-title">Group invitation</h3>
-          </header>
-          <div class="content center-col">
-            <span class="hero-icon"><svg class="ic" aria-hidden="true"><use href="#i-group"/></svg></span>
-            <h4 class="h-screen">Sign in to join</h4>
-            <p class="muted flush">You need a SplitNest account to join this group. After signing in, you return to this invite link.</p>
-          </div>
-          <footer class="footer">
-            <a class="btn btn-primary" href="account.html#a2">Sign in</a>
-            <a class="btn btn-outline" href="account.html#a1">Create account</a>
-          </footer>
-        </div>
-      </div>
-      <ul class="notes">
-        <li>Sign-in is required before joining (PA1).</li>
-        <li>The invite link is kept as the return address, so the user comes back to it after signing in (A2) or creating an account (A1).</li>
-      </ul>
+      <div class="browser"><div class="browser-bar" aria-hidden="true"><span class="browser-dots"><i></i><i></i><i></i></span><span class="address">splitnest.example/join/Xk3p9Qa2</span><span class="browser-more">•••</span></div><div class="website join-page"><a class="app-brand join-brand" href="#g1"><span class="logo">SN</span>SplitNest</a><div class="join-wrap"><section class="join-card"><span class="hero-icon"><svg class="ic" aria-hidden="true"><use href="#i-group"/></svg></span><h3>Sign in to join</h3><p>You need a SplitNest account to join this private group. After signing in, you will return to this invitation.</p><a class="btn btn-primary btn-block" href="account.html#a2">Sign in</a><a class="btn btn-outline btn-block" href="account.html#a1">Create an account</a><p class="join-foot">Your invite link is kept as the return address.</p></section></div></div></div>
+      <ul class="notes"><li>Sign-in is required before joining a group.</li><li>The invite link is preserved through sign-in or registration.</li><li>The signed-out page exposes no private group details.</li></ul>
     </section>
 
     <section class="card" id="g7">
       <h2><span class="id">G7</span>Invite link not valid</h2>
-      <div class="phone">
-        <div class="screen">
-          <header class="appbar">
-            <h3 class="appbar-title">Group invitation</h3>
-          </header>
-          <div class="content center-col">
-            <span class="hero-icon is-warn"><svg class="ic" aria-hidden="true"><use href="#i-warn"/></svg></span>
-            <h4 class="h-screen">This invite link is not valid</h4>
-            <p class="muted flush">The link may be mistyped or no longer exists. Ask a group member to send you a new invite.</p>
-          </div>
-          <footer class="footer">
-            <a class="btn btn-primary" href="#g1">Go to my groups</a>
-          </footer>
-        </div>
-      </div>
-      <ul class="notes">
-        <li>Shown for an unknown or mistyped link. Expiry rules are not defined yet.</li>
-        <li>Shows no group details.</li>
-      </ul>
+      <div class="browser"><div class="browser-bar" aria-hidden="true"><span class="browser-dots"><i></i><i></i><i></i></span><span class="address">splitnest.example/join/invalid</span><span class="browser-more">•••</span></div><div class="website join-page"><a class="app-brand join-brand" href="#g1"><span class="logo">SN</span>SplitNest</a><div class="join-wrap"><section class="join-card"><span class="hero-icon is-warn"><svg class="ic" aria-hidden="true"><use href="#i-warn"/></svg></span><h3>This invite link is not valid</h3><p>The link may be mistyped or no longer exist. Ask a group member to send you a new invitation.</p><a class="btn btn-primary btn-block" href="#g1">Go to my groups</a><p class="join-foot">No group information is shown for invalid links.</p></section></div></div></div>
+      <ul class="notes"><li>Shown for unknown or mistyped invitation tokens.</li><li>Expiry rules are not defined yet.</li><li>The error state does not leak group details.</li></ul>
     </section>
-
   </main>
 </body>
 </html>
