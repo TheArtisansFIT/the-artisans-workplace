@@ -1,14 +1,33 @@
 # SplitNest website mockups (PA2, WBS 2.4.1–2.4.3)
 
-Static, desktop-first **website** mockups for the Account, Group and invite, and Expense screens. Open any `.html` file in a modern browser. No build step, package install or internet connection is needed.
+Static, desktop-first **website** mockups for the Account, Group and invite, Expense, Debt, VietQR, and History screens. Open any `.html` file in a modern browser. No build step, package install or internet connection is needed.
 
 | File | WBS | Screens | Feature |
 |---|---|---|---|
 | [account.html](account.html) | 2.4.1 Account | A1 Sign up, A2 Sign in, A3 Bank details (not saved), A4 Bank details (saved) | F01 |
 | [group-invite.html](group-invite.html) | 2.4.2 Group and invite screens (includes QR join) | G1 My groups, G2 Create group, G3 Group members, G4 Invite (link and QR), G5 Join (signed in), G6 Join (signed out), G7 Invalid link | F02 |
 | [expense.html](expense.html) | 2.4.3 Expense screens | E1 Expenses list, E2 Add expense, E3 Validation errors, E4 Expense detail, E5 Locked expense, E6 Delete confirmation | F03, with repayment status chips for F04 |
+| [debt.html](debt.html) | 2.4.4 Debt screens | D1 Debt list, D2 Report repayment, D3 Review repayment, D4 Confirmed, D5 Rejected | F04 |
+| [vietqr.html](vietqr.html) | VietQR screens | Q1 Payment details, Q2 Generated VietQR | F05 |
+| [history.html](history.html) | History screens | H1 All activity, H2 Repayment filter | F06 |
 
-The debt screens (WBS 2.4.4) are not in this set. In the PA1 schedule, WBS 2.4 starts after 2.1 and runs in parallel with 2.2.
+## Main use case coverage
+
+| Screen | Related use case(s) | Mockup / prototype flow |
+|---|---|---|
+| Account | UC01 Register Account, UC02 Sign In, UC03 Save Bank Details | A1 → A2 → A3 → A4 |
+| Group | UC04 Create Group, UC05 Invite Members, UC06 Join Group, UC07 View Group Members | G1 → G2 → G3 → G4 → G5/G6/G7 |
+| Expense | UC08 Record Shared Expense, UC13 Edit Expense, UC14 Delete Expense | E1 → E2/E3 → E4/E5 → E6 |
+| Debt | UC09 View Debts, UC10 Report Repayment, UC11 Confirm Repayment, UC12 Reject Repayment | D1 → D2 → D3 → D4/D5 |
+| VietQR | UC15 Generate VietQR | Q1 → Q2 |
+| History | UC16 View History and Summary | H1 → H2 |
+
+## Basic accessibility checks
+
+- **Contrast:** primary teal `#167D75` on white and white on primary teal meet WCAG AA for normal text. Body and secondary text use dark blue-grey tones on light surfaces. Statuses use text labels in addition to colour.
+- **Labels:** form controls have persistent visible labels; supporting text and errors are connected with `aria-describedby`. QR graphics have accessible names. Dialogs have programmatic titles.
+- **Keyboard:** links, buttons and fields use native HTML controls, logical DOM order and a visible `:focus-visible` outline. Primary actions are at least 43px high; tables reflow horizontally on narrow screens.
+- **Prototype note:** Figma hotspots supplement keyboard-focus testing in the HTML artefacts; Figma presentation mode itself does not replace an implementation-level accessibility audit.
 
 ## Viewing and implementation notes
 
