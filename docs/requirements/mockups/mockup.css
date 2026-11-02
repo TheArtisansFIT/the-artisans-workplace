@@ -273,6 +273,47 @@ td .avatar { width: 30px; height: 30px; font-size: 10px; }
 .hero-icon.is-warn { background: var(--warn-50); color: var(--warn); }
 .join-foot { margin-top: 20px !important; font-size: 11px; }
 
+/* Debts, VietQR and history */
+.debt-amount { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.debt-amount.is-owed { color: var(--danger); }
+.debt-amount.is-receivable { color: var(--ok); }
+.debt-direction { display: flex; align-items: center; gap: 8px; }
+.debt-direction .ic { width: 16px; height: 16px; color: var(--ink-3); }
+.debt-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(250px, .75fr); gap: 22px; align-items: start; }
+.debt-summary { display: grid; gap: 15px; }
+.debt-summary .summary-row { padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.debt-summary .summary-row:last-child { padding-bottom: 0; border-bottom: 0; }
+.repayment-methods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.method-card { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); font-size: 12px; }
+.method-card.is-selected { border-color: var(--primary); background: var(--primary-50); }
+.method-card .ic { color: var(--primary-700); }
+.status-hero { padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); text-align: center; }
+.status-hero .hero-icon { margin-bottom: 14px; }
+.status-hero h4 { margin: 0 0 7px; font-size: 21px; }
+.status-hero > p { max-width: 480px; margin: 0 auto 20px; color: var(--ink-3); }
+.status-hero .big-amount { display: block; margin-bottom: 20px; }
+.qr-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+.qr-payment { padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); text-align: center; }
+.qr-payment .qr { width: 232px; height: 232px; margin: 0 auto; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.qr-payment h4 { margin: 16px 0 5px; font-size: 18px; }
+.qr-payment p { margin: 0 0 16px; color: var(--ink-3); font-size: 12px; }
+.bank-recipient { display: grid; gap: 10px; margin: 18px 0; padding: 16px; border-radius: 12px; background: var(--primary-50); text-align: left; }
+.bank-recipient .summary-row span:first-child { color: var(--ink-2); }
+.filter-bar { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-bottom: 20px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.filter-bar .field { min-width: 160px; margin: 0; }
+.filter-bar .btn { margin-left: auto; }
+.activity-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.activity-item { position: relative; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 13px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.activity-item:last-child { border-bottom: 0; }
+.activity-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: var(--primary-50); color: var(--primary-700); }
+.activity-icon.is-repayment { background: var(--ok-50); color: var(--ok); }
+.activity-icon.is-pending { background: var(--info-50); color: var(--info); }
+.activity-copy h4 { margin: 0 0 4px; font-size: 14px; }
+.activity-copy p { margin: 0; color: var(--ink-3); font-size: 12px; }
+.activity-time { margin-top: 5px; color: var(--ink-3); font-size: 11px; }
+.activity-amount { text-align: right; }
+.activity-amount .chip { margin-top: 7px; }
+
 /* Expenses */
 .expense-title { display: flex; align-items: center; gap: 12px; }
 .expense-title h3 { margin: 0; font-size: 25px; }
@@ -335,7 +376,7 @@ td .avatar { width: 30px; height: 30px; font-size: 10px; }
   .auth-message > p, .auth-benefits, .auth-foot { display: none; }
   .auth-panel { padding: 28px 22px 36px; }
   .auth-switch { margin-bottom: 28px; }
-  .settings-grid, .form-layout, .detail-grid { grid-template-columns: 1fr; }
+  .settings-grid, .form-layout, .detail-grid, .debt-layout, .qr-layout { grid-template-columns: 1fr; }
   .profile-card .profile { flex-direction: row; text-align: left; }
   .profile-card { text-align: left; }
   .group-grid, .stats { grid-template-columns: 1fr; }
