@@ -8,7 +8,7 @@ load_dotenv()
 def create_app() -> Flask:
     app = Flask(__name__)
 
-    ping_server()
+    #remember to call ping_server when instantiate the app
 
     @app.get("/health")
     def health() -> Response:
