@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useAuth } from './AuthContext.jsx'
 import {
   CURRENT_USER_ID,
   initialDebts,
@@ -53,6 +54,7 @@ function buildDebtsForExpense(expense) {
 }
 
 export function DataProvider({ children }) {
+  const { user, saveBankDetails, removeBankDetails } = useAuth()
   // The mock layer keeps its working copy in localStorage so a page refresh
   // does not throw away groups or expenses created during a demo session.
   // Replace these initializers with API reads during backend integration.
@@ -62,18 +64,33 @@ export function DataProvider({ children }) {
   )
   const [expenses, setExpenses] = useState(stored?.expenses ?? initialExpenses)
   const [debts, setDebts] = useState(stored?.debts ?? initialDebts)
-  const [profile, setProfile] = useState(stored?.profile ?? initialProfile)
+
+  // Profile and bank details now come from the authenticated API session.
+  // Groups, expenses and debts remain mock data until their own endpoints land.
+  const profile = useMemo(
+    () =>
+      user
+        ? {
+            displayName: user.displayName ?? user.name,
+            email: user.email,
+            memberSince: user.memberSince,
+            bankDetails: user.bankDetails ?? null,
+          }
+        : initialProfile,
+    [user],
+  )
+  const currentUserId = user?.id ?? CURRENT_USER_ID
 
   useEffect(() => {
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ groups, expenses, debts, profile }),
+        JSON.stringify({ groups, expenses, debts }),
       )
     } catch {
       // Storage can be unavailable; the in-memory state still works.
     }
-  }, [groups, expenses, debts, profile])
+  }, [groups, expenses, debts])
 
   const getGroup = useCallback(
     (groupId) => groups.find((group) => group.id === groupId) ?? null,
@@ -96,14 +113,14 @@ export function DataProvider({ children }) {
       name: name.trim(),
       description: description.trim(),
       currency: 'VND',
-      organizerId: CURRENT_USER_ID,
-      memberIds: [CURRENT_USER_ID],
+      organizerId: currentUserId,
+      memberIds: [currentUserId],
       createdAt: new Date().toISOString().slice(0, 10),
       inviteToken: Math.random().toString(36).slice(2, 10),
     }
     setGroups((current) => [...current, group])
     return group
-  }, [])
+  }, [currentUserId])
 
   const addExpense = useCallback((groupId, values) => {
     const expense = {
@@ -114,14 +131,14 @@ export function DataProvider({ children }) {
       date: values.date,
       paidBy: values.paidBy,
       participantIds: [...values.participantIds],
-      createdBy: CURRENT_USER_ID,
+      createdBy: currentUserId,
       createdAt: new Date().toISOString(),
       locked: false,
     }
     setExpenses((current) => [expense, ...current])
     setDebts((current) => [...buildDebtsForExpense(expense), ...current])
     return expense
-  }, [])
+  }, [currentUserId])
 
   const updateExpense = useCallback((expenseId, values) => {
     setExpenses((current) =>
@@ -217,24 +234,16 @@ export function DataProvider({ children }) {
   const joinGroup = useCallback((groupId) => {
     setGroups((current) =>
       current.map((group) =>
-        group.id === groupId && !group.memberIds.includes(CURRENT_USER_ID)
-          ? { ...group, memberIds: [...group.memberIds, CURRENT_USER_ID] }
+        group.id === groupId && !group.memberIds.includes(currentUserId)
+          ? { ...group, memberIds: [...group.memberIds, currentUserId] }
           : group,
       ),
     )
-  }, [])
-
-  const saveBankDetails = useCallback((bankDetails) => {
-    setProfile((current) => ({ ...current, bankDetails }))
-  }, [])
-
-  const removeBankDetails = useCallback(() => {
-    setProfile((current) => ({ ...current, bankDetails: null }))
-  }, [])
+  }, [currentUserId])
 
   const value = useMemo(
     () => ({
-      currentUserId: CURRENT_USER_ID,
+      currentUserId,
       groups,
       expenses,
       debts,
@@ -253,6 +262,7 @@ export function DataProvider({ children }) {
       removeBankDetails,
     }),
     [
+      currentUserId,
       groups,
       expenses,
       debts,

@@ -29,12 +29,21 @@ npm run preview
 
 ## Demo account
 
-The login form is prefilled with `minh.le@example.com` / `password123`.
-Any valid email and password of at least 6 characters also work. Use
-`wrongpass` to preview the invalid-credentials state. Registering with
-`taken@example.com` previews the duplicate-email state.
+The Flask API seeds a sample account: `minh.le@example.com` / `password123`.
+Start the backend and frontend together to use it:
 
-Sessions are stored in `localStorage` under `splitnest.session`.
+```bash
+# terminal 1, from src
+python -m flask --app backend.app:create_app run
+
+# terminal 2, from src/frontend
+npm run dev
+```
+
+Register creates a real account in the backend store, duplicate emails are
+rejected, and sign-out ends the server session. Sessions are stored in
+`localStorage` under `splitnest.token` (or `sessionStorage` when “Remember me”
+is unchecked), and the user snapshot is stored under `splitnest.session`.
 
 ## Screens and routes
 
@@ -73,17 +82,19 @@ src/
 
 ## Data and API integration
 
-`src/data/mockData.js` and `src/context/DataContext.jsx` are the temporary
-frontend data layer. The working copy (groups, expenses, debts, and bank
-details) is persisted in `localStorage` under `splitnest.data.v1` so a refresh
-does not discard a demo session, while the session itself lives under
-`splitnest.session`. To reset the demo, clear site data for `localhost:5173`.
+Authentication, sessions and bank details now use the Flask API through
+`src/api/client.js`. `src/data/mockData.js` and `src/context/DataContext.jsx`
+remain the temporary data layer for groups, expenses and debts. Their working
+copy is persisted in `localStorage` under `splitnest.data.v1` so a refresh does
+not discard a demo session. To reset the demo, clear site data for
+`localhost:5173`.
 
-When the Flask REST API is ready, replace the actions in `DataContext.jsx` with
-`fetch` calls and map API responses onto the existing object shapes. Screen
-components should not need structural changes. VietQR rendering is an
-illustrative local placeholder and should be replaced with a valid VietQR
-payload during that integration.
+The Vite dev server proxies `/api` to `http://127.0.0.1:5000`. Set
+`VITE_API_BASE_URL` to point at a different API origin. Replace the remaining
+actions in `DataContext.jsx` with `fetch` calls as the group, expense, debt and
+history endpoints are added. VietQR rendering is an illustrative local
+placeholder and should be replaced with a valid VietQR payload during that
+integration.
 
 ## Notes
 

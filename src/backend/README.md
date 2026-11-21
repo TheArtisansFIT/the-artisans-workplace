@@ -58,3 +58,83 @@ python -m pytest
 ```
 
 The suite uses Flask's test client and runs without starting a server.
+
+## Account API (UC-01, UC-02, UC-03)
+
+The backend now implements registration, sign-in, sign-out and the bank details
+shown on the Profile screen. Development uses an in-memory user store, and the
+sample account `minh.le@example.com` / `password123` is seeded on startup.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/auth/register` | Create an account and return a session token |
+| `POST` | `/api/auth/login` | Sign in with email and password |
+| `POST` | `/api/auth/logout` | End the current session |
+| `GET` | `/api/auth/me` | Return the signed-in profile |
+| `GET` | `/api/users/me` | Return the signed-in profile |
+| `PUT` / `PATCH` | `/api/users/me/bank-details` | Save or edit bank details |
+| `DELETE` | `/api/users/me/bank-details` | Remove saved bank details |
+
+Protected routes expect `Authorization: Bearer <token>`. Passwords are stored
+with Werkzeug password hashes, and the token is signed with `SECRET_KEY`.
+
+Registration request:
+
+```json
+{
+  "displayName": "Minh",
+  "email": "minh@example.com",
+  "password": "password123"
+}
+```
+
+Successful registration and sign-in responses:
+
+```json
+{
+  "token": "<signed token>",
+  "user": {
+    "id": "usr_…",
+    "displayName": "Minh",
+    "email": "minh@example.com",
+    "memberSince": "2026-11-21",
+    "bankDetails": null
+  }
+}
+```
+
+Bank details request:
+
+```json
+{
+  "bankName": "Vietcombank",
+  "accountNumber": "0123456789",
+  "accountHolder": "LE QUANG MINH"
+}
+```
+
+Errors use a consistent shape, with field messages when validation fails:
+
+```json
+{
+  "error": {
+    "code": "validation_error",
+    "message": "Please correct the highlighted fields.",
+    "fields": {"password": "Use at least 6 characters."}
+  }
+}
+```
+
+## Configuration
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `SECRET_KEY` | local development value | Signs session tokens; set this outside local development |
+| `SESSION_MAX_AGE_SECONDS` | `604800` (7 days) | Session lifetime |
+| `MONGO_URI` / `MONGODB_URI` | unset | Use the MongoDB Atlas `users` collection instead of memory |
+| `MONGO_DB_NAME` | `splitnest` | Database name for MongoDB |
+| `SEED_DEMO_USER` | `true` | Create the sample account when it is missing |
+| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed browser origins |
+
+During local development the Vite server proxies `/api` to
+`http://127.0.0.1:5000`, so the frontend can use relative API URLs.

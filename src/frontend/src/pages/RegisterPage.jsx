@@ -21,13 +21,14 @@ export default function RegisterPage() {
   const [searchParams] = useSearchParams()
   const redirectTo = getRedirect(searchParams)
   const [values, setValues] = useState({
-    displayName: 'Minh',
-    email: 'minh.le@example.com',
-    password: 'password123',
-    confirmPassword: 'password123',
+    displayName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   })
   const [errors, setErrors] = useState({})
   const [formError, setFormError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   if (isAuthenticated) {
     return <Navigate to={redirectTo} replace />
@@ -63,20 +64,33 @@ export default function RegisterPage() {
     return nextErrors
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     const nextErrors = validate()
     setErrors(nextErrors)
+    setFormError('')
     if (Object.keys(nextErrors).length > 0) return
 
-    // Placeholder for the future API error response.
-    if (values.email.trim().toLowerCase() === 'taken@example.com') {
-      setFormError('An account with this email already exists. Please sign in instead.')
-      return
+    setSubmitting(true)
+    try {
+      await register({
+        displayName: values.displayName.trim(),
+        email: values.email.trim(),
+        password: values.password,
+      })
+      navigate(redirectTo, { replace: true })
+    } catch (error) {
+      const fields = error.fields || {}
+      setErrors((current) => ({
+        ...current,
+        ...(fields.displayName ? { displayName: fields.displayName } : {}),
+        ...(fields.email ? { email: fields.email } : {}),
+        ...(fields.password ? { password: fields.password } : {}),
+      }))
+      setFormError(error.message)
+    } finally {
+      setSubmitting(false)
     }
-
-    register({ displayName: values.displayName.trim(), email: values.email.trim() })
-    navigate(redirectTo, { replace: true })
   }
 
   return (
@@ -207,8 +221,8 @@ export default function RegisterPage() {
           </Field>
         </div>
 
-        <Button type="submit" block size="lg" iconRight={ArrowRight}>
-          Create account
+        <Button type="submit" block size="lg" iconRight={ArrowRight} loading={submitting} disabled={submitting}>
+          {submitting ? 'Creating account…' : 'Create account'}
         </Button>
       </form>
 

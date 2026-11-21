@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CreditCard, Pencil, Save, Trash2 } from 'lucide-react'
 import Avatar from '../components/ui/Avatar.jsx'
 import Badge from '../components/ui/Badge.jsx'
@@ -21,15 +21,22 @@ export default function ProfilePage() {
   const [values, setValues] = useState(profile.bankDetails ?? EMPTY_BANK)
   const [errors, setErrors] = useState({})
   const [justSaved, setJustSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
 
   const hasSavedDetails = Boolean(profile.bankDetails)
   const isComplete = Object.values(values).every((value) => value.trim())
+
+  useEffect(() => {
+    if (!editing) setValues(profile.bankDetails ?? EMPTY_BANK)
+  }, [editing, profile.bankDetails])
 
   const startEditing = () => {
     setValues(profile.bankDetails ?? EMPTY_BANK)
     setEditing(true)
     setConfirmRemove(false)
     setJustSaved(false)
+    setFormError('')
   }
 
   const update = (event) => {
@@ -37,32 +44,53 @@ export default function ProfilePage() {
     setValues((current) => ({ ...current, [name]: value }))
     setErrors((current) => ({ ...current, [name]: '' }))
     setJustSaved(false)
+    setFormError('')
   }
 
-  const handleSave = (event) => {
+  const handleSave = async (event) => {
     event.preventDefault()
     const nextErrors = {}
     if (!values.bankName.trim()) nextErrors.bankName = 'Enter the bank name.'
     if (!values.accountNumber.trim()) nextErrors.accountNumber = 'Enter the account number.'
     if (!values.accountHolder.trim()) nextErrors.accountHolder = 'Enter the account holder name.'
     setErrors(nextErrors)
+    setFormError('')
     if (Object.keys(nextErrors).length > 0) return
 
-    saveBankDetails({
-      bankName: values.bankName.trim(),
-      accountNumber: values.accountNumber.trim(),
-      accountHolder: values.accountHolder.trim().toUpperCase(),
-    })
-    setEditing(false)
-    setJustSaved(true)
+    setSaving(true)
+    try {
+      await saveBankDetails({
+        bankName: values.bankName.trim(),
+        accountNumber: values.accountNumber.trim(),
+        accountHolder: values.accountHolder.trim().toUpperCase(),
+      })
+      setEditing(false)
+      setJustSaved(true)
+    } catch (error) {
+      const fields = error.fields || {}
+      if (Object.keys(fields).length > 0) {
+        setErrors(fields)
+      }
+      setFormError(error.message)
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const handleRemove = () => {
-    removeBankDetails()
-    setValues(EMPTY_BANK)
-    setConfirmRemove(false)
-    setEditing(false)
-    setJustSaved(false)
+  const handleRemove = async () => {
+    setFormError('')
+    setSaving(true)
+    try {
+      await removeBankDetails()
+      setValues(EMPTY_BANK)
+      setConfirmRemove(false)
+      setEditing(false)
+      setJustSaved(false)
+    } catch (error) {
+      setFormError(error.message)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -118,6 +146,12 @@ export default function ProfilePage() {
             SplitNest does not connect to your bank, verify these details or move money. Transfers always happen outside SplitNest.
           </Notice>
 
+          {formError && (
+            <Notice tone="error" className="bank-form__notice" style={{ marginBottom: 18 }}>
+              {formError}
+            </Notice>
+          )}
+
           {justSaved && (
             <Notice tone="success" className="bank-form__notice" style={{ marginBottom: 18 }}>
               Your bank details were saved for future VietQR payment references.
@@ -145,17 +179,34 @@ export default function ProfilePage() {
                 <Notice tone="warning" style={{ marginBottom: 16 }}>
                   <strong>Remove saved bank details?</strong> VietQR generation will need them again before it can be used.
                   <div className="inline" style={{ marginTop: 10 }}>
-                    <Button size="sm" variant="danger" onClick={handleRemove} icon={Trash2}>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={handleRemove}
+                      icon={Trash2}
+                      loading={saving}
+                      disabled={saving}
+                    >
                       Yes, remove
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setConfirmRemove(false)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setConfirmRemove(false)}
+                      disabled={saving}
+                    >
                       Keep details
                     </Button>
                   </div>
                 </Notice>
               ) : (
                 <div className="form-actions form-actions--split">
-                  <Button variant="danger-ghost" icon={Trash2} onClick={() => setConfirmRemove(true)}>
+                  <Button
+                    variant="danger-ghost"
+                    icon={Trash2}
+                    onClick={() => setConfirmRemove(true)}
+                    disabled={saving}
+                  >
                     Remove bank details
                   </Button>
                   <Button variant="outline" icon={Pencil} onClick={startEditing}>
@@ -226,12 +277,19 @@ export default function ProfilePage() {
                     onClick={() => {
                       setEditing(false)
                       setErrors({})
+                      setFormError('')
                     }}
+                    disabled={saving}
                   >
                     Cancel
                   </Button>
                 )}
-                <Button type="submit" icon={Save} disabled={!isComplete}>
+                <Button
+                  type="submit"
+                  icon={Save}
+                  disabled={!isComplete || saving}
+                  loading={saving}
+                >
                   Save bank details
                 </Button>
               </div>

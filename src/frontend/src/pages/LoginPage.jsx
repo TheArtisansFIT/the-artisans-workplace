@@ -7,6 +7,8 @@ import Field from '../components/ui/Field.jsx'
 import PasswordInput from '../components/ui/PasswordInput.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 function getRedirect(searchParams) {
   const redirect = searchParams.get('redirect')
   if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) return redirect
@@ -25,6 +27,7 @@ export default function LoginPage() {
   })
   const [errors, setErrors] = useState({})
   const [formError, setFormError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   if (isAuthenticated) {
     return <Navigate to={redirectTo} replace />
@@ -40,7 +43,9 @@ export default function LoginPage() {
   const validate = () => {
     const nextErrors = {}
     if (!values.identifier.trim()) {
-      nextErrors.identifier = 'Enter your email address or username.'
+      nextErrors.identifier = 'Enter your email address.'
+    } else if (!EMAIL_PATTERN.test(values.identifier.trim())) {
+      nextErrors.identifier = 'Enter a valid email address, for example minh@example.com.'
     }
     if (!values.password) {
       nextErrors.password = 'Enter your password.'
@@ -50,21 +55,33 @@ export default function LoginPage() {
     return nextErrors
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     const nextErrors = validate()
     setErrors(nextErrors)
+    setFormError('')
     if (Object.keys(nextErrors).length > 0) return
 
-    // Placeholder for the future API error response. The demo password makes
-    // the error state easy to inspect without a backend.
-    if (values.password === 'wrongpass') {
-      setFormError('Email or password is incorrect. Please try again.')
-      return
+    setSubmitting(true)
+    try {
+      await login({
+        email: values.identifier.trim(),
+        password: values.password,
+        remember: values.remember,
+      })
+      navigate(redirectTo, { replace: true })
+    } catch (error) {
+      const fields = error.fields || {}
+      if (fields.email || fields.password) {
+        setErrors({
+          identifier: fields.email || '',
+          password: fields.password || '',
+        })
+      }
+      setFormError(error.message)
+    } finally {
+      setSubmitting(false)
     }
-
-    login({ email: values.identifier.includes('@') ? values.identifier : `${values.identifier}@splitnest.local` })
-    navigate(redirectTo, { replace: true })
   }
 
   return (
@@ -85,7 +102,7 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} noValidate>
         <Field
-          label="Email or username"
+          label="Email address"
           htmlFor="login-identifier"
           error={errors.identifier}
           hintId="login-identifier-help"
@@ -162,13 +179,13 @@ export default function LoginPage() {
           </span>
         </div>
 
-        <Button type="submit" block size="lg" iconRight={ArrowRight}>
-          Sign in
+        <Button type="submit" block size="lg" iconRight={ArrowRight} loading={submitting} disabled={submitting}>
+          {submitting ? 'Signing in…' : 'Sign in'}
         </Button>
       </form>
 
       <p className="auth-card__demo">
-        Demo skeleton: the sample details are prefilled. Any email and a 6+ character password work.
+        Demo account: minh.le@example.com / password123
       </p>
       <p className="auth-card__foot">
         Signed-in users can create and join private groups. Your group information stays private to its members.

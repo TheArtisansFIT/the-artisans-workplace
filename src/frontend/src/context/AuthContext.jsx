@@ -1,10 +1,15 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
-import { displayNameFromEmail } from '../utils/format.js'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import {
+  api,
+  clearStoredToken,
+  getStoredToken,
+  setStoredToken,
+} from '../api/client.js'
 
 const STORAGE_KEY = 'splitnest.session'
 const AuthContext = createContext(null)
 
-function readStoredSession() {
+function readStoredUser() {
   try {
     const value = localStorage.getItem(STORAGE_KEY)
     return value ? JSON.parse(value) : null
@@ -13,43 +18,160 @@ function readStoredSession() {
   }
 }
 
-export function AuthProvider({ children }) {
-  // This is a frontend-only session placeholder. It will be replaced by the
-  // Flask authentication endpoints in the integration stage.
-  const [user, setUser] = useState(readStoredSession)
+function writeStoredUser(user) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
+  } catch {
+    // Storage can be unavailable in private browsing; state still works.
+  }
+}
 
-  const login = useCallback(({ email, name }) => {
-    const nextUser = {
-      id: 'minh',
-      name: name || displayNameFromEmail(email),
-      email: email.trim(),
-    }
+function removeStoredUser() {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // Nothing else to do.
+  }
+}
+
+function readInitialSession() {
+  const hasToken = Boolean(getStoredToken())
+  return {
+    hasToken,
+    user: hasToken ? readStoredUser() : null,
+  }
+}
+
+function toSessionUser(user) {
+  return {
+    id: user.id,
+    name: user.displayName,
+    displayName: user.displayName,
+    email: user.email,
+    memberSince: user.memberSince,
+    bankDetails: user.bankDetails ?? null,
+  }
+}
+
+export function AuthProvider({ children }) {
+  const [initial] = useState(readInitialSession)
+  const [user, setUser] = useState(initial.user)
+  // The snapshot in localStorage makes a refresh instant. The API call below
+  // still refreshes it and ends the session if the token has expired.
+  const [isBootstrapping, setIsBootstrapping] = useState(
+    initial.hasToken && !initial.user,
+  )
+
+  const clearSession = useCallback(() => {
+    clearStoredToken()
+    removeStoredUser()
+    setUser(null)
+    setIsBootstrapping(false)
+  }, [])
+
+  const applySession = useCallback((session, persist = true) => {
+    setStoredToken(session.token, persist)
+    const nextUser = toSessionUser(session.user)
     setUser(nextUser)
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
-    } catch {
-      // Storage can be unavailable in private browsing; the session still works.
-    }
+    writeStoredUser(nextUser)
+    setIsBootstrapping(false)
     return nextUser
   }, [])
 
-  const register = useCallback(
-    ({ displayName, email }) => login({ email, name: displayName }),
-    [login],
-  )
-
-  const logout = useCallback(() => {
-    setUser(null)
-    try {
-      localStorage.removeItem(STORAGE_KEY)
-    } catch {
-      // Nothing else to do.
-    }
+  const updateUser = useCallback((nextUser) => {
+    const mapped = toSessionUser(nextUser)
+    setUser(mapped)
+    writeStoredUser(mapped)
+    return mapped
   }, [])
 
+  useEffect(() => {
+    if (!getStoredToken()) {
+      removeStoredUser()
+      setIsBootstrapping(false)
+      return undefined
+    }
+
+    let active = true
+    api
+      .me()
+      .then((payload) => {
+        if (active) updateUser(payload.user)
+      })
+      .catch((error) => {
+        // A network outage should not throw away a usable local snapshot; an
+        // expired or revoked token should.
+        if (active && error.status === 401) clearSession()
+      })
+      .finally(() => {
+        if (active) setIsBootstrapping(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [clearSession, updateUser])
+
+  const login = useCallback(
+    async ({ email, password, remember = true }) => {
+      const session = await api.login({ email, password })
+      return applySession(session, remember)
+    },
+    [applySession],
+  )
+
+  const register = useCallback(
+    async ({ displayName, email, password }) => {
+      const session = await api.register({ displayName, email, password })
+      return applySession(session, true)
+    },
+    [applySession],
+  )
+
+  const logout = useCallback(async () => {
+    const token = getStoredToken()
+    clearSession()
+    if (!token) return
+    try {
+      await api.logout(token)
+    } catch {
+      // The local session is already gone; the token expires on its own.
+    }
+  }, [clearSession])
+
+  const saveBankDetails = useCallback(
+    async (bankDetails) => {
+      const payload = await api.saveBankDetails(bankDetails)
+      return updateUser(payload.user)
+    },
+    [updateUser],
+  )
+
+  const removeBankDetails = useCallback(async () => {
+    const payload = await api.removeBankDetails()
+    return updateUser(payload.user)
+  }, [updateUser])
+
   const value = useMemo(
-    () => ({ user, isAuthenticated: Boolean(user), login, register, logout }),
-    [user, login, register, logout],
+    () => ({
+      user,
+      isAuthenticated: Boolean(user),
+      isBootstrapping,
+      login,
+      register,
+      logout,
+      saveBankDetails,
+      removeBankDetails,
+    }),
+    [
+      user,
+      isBootstrapping,
+      login,
+      register,
+      logout,
+      saveBankDetails,
+      removeBankDetails,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
