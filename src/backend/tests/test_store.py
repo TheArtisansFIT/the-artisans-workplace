@@ -101,6 +101,8 @@ def test_mongo_user_store_persists_users_and_normalizes_email(
     assert stored["hashed_password"] == "secure-hash"
     assert stored["created_at"].tzinfo == timezone.utc
     assert "displayName" not in stored
+    assert "sessionVersion" not in stored
+    assert "session_version" not in stored
     assert loaded is not None
     assert loaded["id"] == "usr_123"
     assert loaded["displayName"] == "Minh"
@@ -110,7 +112,9 @@ def test_mongo_user_store_persists_users_and_normalizes_email(
     assert collection.indexes == [("email", True), ("email", True)]
 
 
-def test_mongo_store_maps_profile_and_session_updates(monkeypatch) -> None:
+def test_mongo_store_maps_profile_updates_without_persisting_session_version(
+    monkeypatch,
+) -> None:
     collection = FakeCollection()
 
     class FakeClientConstructor(FakeMongoClient):
@@ -145,7 +149,8 @@ def test_mongo_store_maps_profile_and_session_updates(monkeypatch) -> None:
 
     assert updated is not None
     assert updated["bankDetails"]["accountNumber"] == "12345678"
-    assert updated["sessionVersion"] == 1
+    assert "sessionVersion" not in collection.documents["usr_profile"]
+    assert "session_version" not in collection.documents["usr_profile"]
     assert collection.documents["usr_profile"]["bank_details"] == {
         "bank_name": "Vietcombank",
         "account_number": "12345678",

@@ -124,9 +124,6 @@ class MongoUserStore:
             "passwordHash": user.get("hashed_password", user.get("passwordHash", "")),
             "memberSince": member_since,
             "bankDetails": bank_details,
-            "sessionVersion": int(
-                user.get("session_version", user.get("sessionVersion", 0))
-            ),
         }
 
     @staticmethod
@@ -140,7 +137,6 @@ class MongoUserStore:
             "created_at": datetime.combine(
                 member_since, time.min, tzinfo=timezone.utc
             ),
-            "session_version": int(user.get("sessionVersion", 0)),
         }
         bank_details = user.get("bankDetails")
         if bank_details:
@@ -168,11 +164,15 @@ class MongoUserStore:
     def update_user(self, user_id: str, changes: dict[str, Any]) -> dict[str, Any] | None:
         field_names = {
             "bankDetails": "bank_details",
-            "sessionVersion": "session_version",
         }
         mongo_changes: dict[str, Any] = {}
         unset_fields: dict[str, str] = {}
         for key, value in changes.items():
+            if key in {"sessionVersion", "session_version"}:
+                # Session versions are runtime auth state, not user data stored in MongoDB.
+                unset_fields["sessionVersion"] = ""
+                unset_fields["session_version"] = ""
+                continue
             mongo_key = field_names.get(key, key)
             if key == "bankDetails" and not value:
                 unset_fields[mongo_key] = ""
