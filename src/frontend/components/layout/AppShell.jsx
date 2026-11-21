@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { LogOut, ReceiptText, Sparkles, UserRound, UsersRound, Wallet } from 'lucide-react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
@@ -14,6 +15,8 @@ export default function AppShell() {
   const { groups, currentUserId } = useData()
   const location = useLocation()
   const navigate = useNavigate()
+  const [signOutError, setSignOutError] = useState('')
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   const myGroups = groups.filter((group) => group.memberIds.includes(currentUserId))
   const activeGroup = myGroups[0]
@@ -26,9 +29,17 @@ export default function AppShell() {
   const isExpensesPage = isExpensePath || (isGroupPath && (tab === 'expenses' || !tab))
   const isDebtsPage = isDebtPath || (isGroupPath && tab === 'debts')
 
-  const handleSignOut = () => {
-    logout()
-    navigate('/login')
+  const handleSignOut = async () => {
+    setSignOutError('')
+    setIsSigningOut(true)
+    try {
+      await logout()
+      navigate('/login')
+    } catch (error) {
+      setSignOutError(error.message || 'Could not sign out. Please try again.')
+    } finally {
+      setIsSigningOut(false)
+    }
   }
 
   return (
@@ -37,6 +48,11 @@ export default function AppShell() {
         <Brand to="/groups" />
         <span className="topbar__context">Personal workspace</span>
         <div className="topbar__actions">
+          {signOutError && (
+            <span role="alert" className="help">
+              {signOutError}
+            </span>
+          )}
           <NavLink className="topbar__user" to="/profile" aria-label="Open profile and bank details">
             <span className="topbar__user-copy">
               <strong>{user?.name ?? 'Minh'}</strong>
@@ -53,6 +69,7 @@ export default function AppShell() {
             type="button"
             className="btn btn--ghost btn--icon btn--sm"
             onClick={handleSignOut}
+            disabled={isSigningOut}
             aria-label="Sign out"
             title="Sign out"
           >

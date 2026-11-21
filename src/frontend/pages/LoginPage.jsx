@@ -111,6 +111,7 @@ export default function LoginPage() {
             <input
               id="login-identifier"
               name="identifier"
+              type="email"
               className={`input ${errors.identifier ? 'input--error' : ''}`}
               value={values.identifier}
               onChange={update}

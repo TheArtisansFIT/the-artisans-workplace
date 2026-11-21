@@ -1,8 +1,8 @@
 # SplitNest frontend
 
-Frontend skeleton for SplitNest, a shared-expense manager for small groups. It
-implements the ten required screens as a navigable React application so flows can
-be reviewed before the Flask REST API and MongoDB Atlas layer are added.
+SplitNest is a shared-expense manager for small groups. The React application
+uses the Flask REST API for account registration, sign-in, sign-out, and bank
+details; MongoDB provides persistent account storage.
 
 ## Stack
 
@@ -30,18 +30,20 @@ npm run preview
 ## Demo account
 
 The Flask API seeds a sample account: `minh.le@example.com` / `password123`.
-Start the backend and frontend together to use it:
+Configure MongoDB as described in `src/backend/README.md`, then start the
+backend and frontend:
 
 ```bash
 # terminal 1, from src
-python -m flask --app backend.app:create_app run
+python -m flask --env-file ../.env --app backend.app:create_app run
 
-# terminal 2, from src/frontend
+# terminal 2, from the repository root
+cd src/frontend
 npm run dev
 ```
 
-Register creates a real account in the backend store, duplicate emails are
-rejected, and sign-out ends the server session. Sessions are stored in
+Register creates a MongoDB-backed account, duplicate emails are rejected, and
+sign-out invalidates the server session. Sessions are stored in
 `localStorage` under `splitnest.token` (or `sessionStorage` when “Remember me”
 is unchecked), and the user snapshot is stored under `splitnest.session`.
 

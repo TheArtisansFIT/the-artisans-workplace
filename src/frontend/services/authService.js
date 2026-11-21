@@ -28,9 +28,10 @@ export const authService = {
     return result
   },
 
-  async logout() {
+  async logout(token) {
     const result = await request('/auth/logout', {
       method: 'POST',
+      token,
     })
 
     clearStoredToken()

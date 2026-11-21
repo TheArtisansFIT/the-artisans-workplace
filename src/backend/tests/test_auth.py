@@ -163,7 +163,12 @@ def test_user_can_sign_in_again_after_logout(
 
 def test_demo_account_is_seeded_for_the_frontend() -> None:
     app = create_app(
-        {"TESTING": True, "SECRET_KEY": "test-secret", "SEED_DEMO_USER": True}
+        {
+            "TESTING": True,
+            "SECRET_KEY": "test-secret",
+            "SEED_DEMO_USER": True,
+            "MONGO_URI": None,
+        }
     )
     client = app.test_client()
 

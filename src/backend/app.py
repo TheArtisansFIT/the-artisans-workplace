@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask, Response, jsonify, request
+from pymongo.errors import PyMongoError
 from werkzeug.exceptions import HTTPException
 
 from .auth import auth_bp, seed_demo_user
@@ -22,6 +23,7 @@ def create_app(test_config: dict | None = None) -> Flask:
         ),
         MONGO_URI=os.environ.get("MONGO_URI") or os.environ.get("MONGODB_URI"),
         MONGO_DB_NAME=os.environ.get("MONGO_DB_NAME", "splitnest"),
+        USER_STORE=os.environ.get("USER_STORE", "").strip().lower(),
         SEED_DEMO_USER=os.environ.get("SEED_DEMO_USER", "true").lower()
         in {"1", "true", "yes"},
         CORS_ORIGINS=_split_origins(
@@ -44,11 +46,25 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     @app.get("/health")
     def health() -> Response:
-        return jsonify(status="ok")
+        store_type = "mongodb" if app.config.get("MONGO_URI") else "memory"
+        return jsonify(status="ok", storage=store_type)
 
     @app.errorhandler(ApiError)
     def handle_api_error(error: ApiError):
         return error.to_response()
+
+    @app.errorhandler(PyMongoError)
+    def handle_database_error(error: PyMongoError):
+        app.logger.exception("MongoDB request failed")
+        return (
+            jsonify(
+                error={
+                    "code": "database_unavailable",
+                    "message": "The database is temporarily unavailable. Please try again.",
+                }
+            ),
+            503,
+        )
 
     @app.errorhandler(HTTPException)
     def handle_http_error(error: HTTPException):

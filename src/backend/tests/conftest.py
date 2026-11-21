@@ -12,6 +12,7 @@ def app() -> Flask:
             "TESTING": True,
             "SECRET_KEY": "test-secret",
             "SEED_DEMO_USER": False,
+            "MONGO_URI": None,
         }
     )
 

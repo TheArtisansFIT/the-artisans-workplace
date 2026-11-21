@@ -130,13 +130,8 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     const token = getStoredToken()
+    if (token) await authService.logout(token)
     clearSession()
-    if (!token) return
-    try {
-      await authService.logout(token)
-    } catch {
-      // The local session is already gone; the token expires on its own.
-    }
   }, [clearSession])
 
   const saveBankDetails = useCallback(

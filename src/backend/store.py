@@ -1,13 +1,9 @@
-"""User persistence for the SplitNest API.
-
-The development and test default is an in-memory store so the backend can run
-without external services. Set ``MONGO_URI`` (or ``MONGODB_URI``) to use the
-MongoDB Atlas collection prepared for the project.
-"""
+"""User persistence for the SplitNest API."""
 
 from __future__ import annotations
 
 import threading
+from datetime import date, datetime, time, timezone
 from typing import Any, Protocol
 
 from flask import Flask
@@ -79,17 +75,81 @@ class MongoUserStore:
             ) from exc
 
         self._duplicate_key_error = DuplicateKeyError
-        self._client = MongoClient(uri, serverSelectionTimeoutMS=5000)
-        self._users = self._client[database_name]["users"]
-        self._users.create_index("email", unique=True)
+        try:
+            self._client = MongoClient(
+                uri,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+            )
+            self._client.admin.command("ping")
+            self._users = self._client[database_name]["users"]
+            self._users.create_index("email", unique=True)
+        except Exception as exc:
+            if hasattr(self, "_client"):
+                self._client.close()
+            raise RuntimeError(
+                "Could not connect to MongoDB or prepare the users collection. "
+                "Check MONGO_URI, network access, and database credentials."
+            ) from exc
 
     @staticmethod
     def _to_user(document: dict[str, Any] | None) -> dict[str, Any] | None:
         if document is None:
             return None
         user = dict(document)
-        user["id"] = str(user.pop("_id"))
-        return user
+        created_at = user.get("created_at", user.get("memberSince"))
+        if isinstance(created_at, datetime):
+            member_since = created_at.date().isoformat()
+        elif created_at:
+            member_since = str(created_at)[:10]
+        else:
+            member_since = ""
+
+        bank_details = user.get("bank_details", user.get("bankDetails"))
+        if bank_details:
+            bank_details = {
+                "bankName": bank_details.get("bank_name", bank_details.get("bankName", "")),
+                "accountNumber": bank_details.get(
+                    "account_number", bank_details.get("accountNumber", "")
+                ),
+                "accountHolder": bank_details.get(
+                    "account_holder", bank_details.get("accountHolder", "")
+                ),
+            }
+
+        return {
+            "id": str(user["_id"]),
+            "displayName": user.get("display_name", user.get("displayName", "")),
+            "email": user["email"],
+            "passwordHash": user.get("hashed_password", user.get("passwordHash", "")),
+            "memberSince": member_since,
+            "bankDetails": bank_details,
+            "sessionVersion": int(
+                user.get("session_version", user.get("sessionVersion", 0))
+            ),
+        }
+
+    @staticmethod
+    def _to_document(user: dict[str, Any]) -> dict[str, Any]:
+        member_since = date.fromisoformat(user["memberSince"])
+        document: dict[str, Any] = {
+            "_id": user["id"],
+            "display_name": user["displayName"],
+            "email": user["email"].strip().lower(),
+            "hashed_password": user["passwordHash"],
+            "created_at": datetime.combine(
+                member_since, time.min, tzinfo=timezone.utc
+            ),
+            "session_version": int(user.get("sessionVersion", 0)),
+        }
+        bank_details = user.get("bankDetails")
+        if bank_details:
+            document["bank_details"] = {
+                "bank_name": bank_details["bankName"],
+                "account_number": bank_details["accountNumber"],
+                "account_holder": bank_details["accountHolder"],
+            }
+        return document
 
     def find_by_email(self, email: str) -> dict[str, Any] | None:
         return self._to_user(self._users.find_one({"email": email.strip().lower()}))
@@ -98,8 +158,7 @@ class MongoUserStore:
         return self._to_user(self._users.find_one({"_id": user_id}))
 
     def create_user(self, user: dict[str, Any]) -> dict[str, Any]:
-        document = {**user, "email": user["email"].strip().lower(), "_id": user["id"]}
-        document.pop("id")
+        document = self._to_document(user)
         try:
             self._users.insert_one(document)
         except self._duplicate_key_error as exc:
@@ -107,12 +166,40 @@ class MongoUserStore:
         return {**user, "email": document["email"]}
 
     def update_user(self, user_id: str, changes: dict[str, Any]) -> dict[str, Any] | None:
-        self._users.update_one({"_id": user_id}, {"$set": changes})
+        field_names = {
+            "bankDetails": "bank_details",
+            "sessionVersion": "session_version",
+        }
+        mongo_changes: dict[str, Any] = {}
+        unset_fields: dict[str, str] = {}
+        for key, value in changes.items():
+            mongo_key = field_names.get(key, key)
+            if key == "bankDetails" and not value:
+                unset_fields[mongo_key] = ""
+                continue
+            if key == "bankDetails" and value:
+                value = {
+                    "bank_name": value["bankName"],
+                    "account_number": value["accountNumber"],
+                    "account_holder": value["accountHolder"],
+                }
+            mongo_changes[mongo_key] = value
+        update: dict[str, Any] = {}
+        if mongo_changes:
+            update["$set"] = mongo_changes
+        if unset_fields:
+            update["$unset"] = unset_fields
+        self._users.update_one({"_id": user_id}, update)
         return self.find_by_id(user_id)
 
 
 def build_user_store(app: Flask) -> UserStore:
-    uri = app.config.get("MONGO_URI")
+    uri = (app.config.get("MONGO_URI") or "").strip()
     if uri:
         return MongoUserStore(uri, app.config.get("MONGO_DB_NAME", "splitnest"))
-    return MemoryUserStore()
+    if app.testing or app.config.get("USER_STORE") == "memory":
+        return MemoryUserStore()
+    raise RuntimeError(
+        "MongoDB is not configured. Set MONGO_URI (or MONGODB_URI) to persist "
+        "accounts, or explicitly set USER_STORE=memory for temporary local data."
+    )
