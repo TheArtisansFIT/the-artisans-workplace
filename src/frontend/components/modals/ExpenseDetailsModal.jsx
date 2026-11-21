@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Pencil, Trash2 } from 'lucide-react'
-import Avatar from '../components/ui/Avatar.jsx'
-import Badge from '../components/ui/Badge.jsx'
-import Button from '../components/ui/Button.jsx'
-import Modal from '../components/ui/Modal.jsx'
-import Notice from '../components/ui/Notice.jsx'
-import { useData } from '../context/DataContext.jsx'
-import { memberLookup } from '../data/mockData.js'
-import { formatDate, formatVND } from '../utils/format.js'
-import { debtStatusMeta } from '../utils/selectors.js'
+import Avatar from '../ui/Avatar.jsx'
+import Badge from '../ui/Badge.jsx'
+import Button from '../ui/Button.jsx'
+import Modal from '../ui/Modal.jsx'
+import Notice from '../ui/Notice.jsx'
+import { useData } from '../../context/DataContext.jsx'
+import { getMember } from '../../services/memberService.js'
+import { formatDate, formatVND } from '../../utils/format.js'
+import { debtStatusMeta } from '../../utils/selectors.js'
 
 export default function ExpenseDetailsModal() {
   const { groupId, expenseId } = useParams()
@@ -29,7 +29,7 @@ export default function ExpenseDetailsModal() {
     )
   }
 
-  const payer = memberLookup[expense.paidBy]
+  const payer = getMember(expense.paidBy)
   const participantDebts = debts.filter(
     (debt) => debt.expenseId === expense.id && debt.to === expense.paidBy,
   )
@@ -132,7 +132,7 @@ export default function ExpenseDetailsModal() {
           </thead>
           <tbody>
             {expense.participantIds.map((memberId) => {
-              const member = memberLookup[memberId]
+              const member = getMember(memberId)
               const debt = participantDebts.find((item) => item.from === memberId)
               const isPayer = memberId === expense.paidBy
               const meta = debt ? debtStatusMeta(debt.status) : null

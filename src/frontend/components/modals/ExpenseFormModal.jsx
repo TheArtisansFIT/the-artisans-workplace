@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Check, Save } from 'lucide-react'
-import Avatar from '../components/ui/Avatar.jsx'
-import Button from '../components/ui/Button.jsx'
-import Field from '../components/ui/Field.jsx'
-import Modal from '../components/ui/Modal.jsx'
-import Notice from '../components/ui/Notice.jsx'
-import { useData } from '../context/DataContext.jsx'
-import { memberLookup } from '../data/mockData.js'
-import { formatVND, todayInputValue } from '../utils/format.js'
-import { splitEqually } from '../utils/split.js'
+import Avatar from '../ui/Avatar.jsx'
+import Button from '../ui/Button.jsx'
+import Field from '../ui/Field.jsx'
+import Modal from '../ui/Modal.jsx'
+import Notice from '../ui/Notice.jsx'
+import { useData } from '../../context/DataContext.jsx'
+import { getMember, getMembers } from '../../services/memberService.js'
+import { formatVND, todayInputValue } from '../../utils/format.js'
+import { splitEqually } from '../../utils/split.js'
 
 export default function ExpenseFormModal() {
   const { groupId, expenseId } = useParams()
@@ -19,7 +19,7 @@ export default function ExpenseFormModal() {
   const existing = expenses.find((expense) => expense.id === expenseId)
   const isEditing = Boolean(expenseId)
 
-  const members = (group?.memberIds ?? []).map((id) => memberLookup[id]).filter(Boolean)
+  const members = getMembers(group?.memberIds)
   const defaultParticipants = existing?.participantIds ?? group?.memberIds ?? []
   const [values, setValues] = useState({
     description: existing?.description ?? '',
@@ -292,7 +292,7 @@ export default function ExpenseFormModal() {
                   {remainder > 0 && ', with leftover đồng assigned in member order'}.
                 </p>
                 {values.participantIds.map((memberId) => {
-                  const member = memberLookup[memberId]
+                  const member = getMember(memberId)
                   const extra = remainder > 0 && values.participantIds.indexOf(memberId) < remainder
                   return (
                     <div className="split-preview__line" key={memberId}>

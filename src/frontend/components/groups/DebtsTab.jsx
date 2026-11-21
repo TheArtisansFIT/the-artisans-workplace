@@ -6,7 +6,7 @@ import Button from '../ui/Button.jsx'
 import EmptyState from '../ui/EmptyState.jsx'
 import Notice from '../ui/Notice.jsx'
 import StatCard from '../ui/StatCard.jsx'
-import { memberLookup } from '../../data/mockData.js'
+import { getMember } from '../../services/memberService.js'
 import { formatDate, formatVND } from '../../utils/format.js'
 import { debtStatusMeta, visibleDebts } from '../../utils/selectors.js'
 
@@ -74,8 +74,8 @@ export default function DebtsTab({ group, expenses, debts, currentUserId }) {
                 <tbody>
                   {list.map((debt) => {
                     const expense = expenses.find((item) => item.id === debt.expenseId)
-                    const from = memberLookup[debt.from]
-                    const to = memberLookup[debt.to]
+                    const from = getMember(debt.from)
+                    const to = getMember(debt.to)
                     const meta = debtStatusMeta(debt.status)
                     const action = actionForDebt(debt, group.id, currentUserId)
                     const youAreDebtor = debt.from === currentUserId

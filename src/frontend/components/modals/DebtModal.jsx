@@ -12,24 +12,24 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react'
-import Avatar from '../components/ui/Avatar.jsx'
-import Badge from '../components/ui/Badge.jsx'
-import Button from '../components/ui/Button.jsx'
-import Field from '../components/ui/Field.jsx'
-import Modal from '../components/ui/Modal.jsx'
-import Notice from '../components/ui/Notice.jsx'
-import QrPlaceholder from '../components/ui/QrPlaceholder.jsx'
-import { useData } from '../context/DataContext.jsx'
-import { memberBankDetails, memberLookup } from '../data/mockData.js'
+import Avatar from '../ui/Avatar.jsx'
+import Badge from '../ui/Badge.jsx'
+import Button from '../ui/Button.jsx'
+import Field from '../ui/Field.jsx'
+import Modal from '../ui/Modal.jsx'
+import Notice from '../ui/Notice.jsx'
+import QrPlaceholder from '../ui/QrPlaceholder.jsx'
+import { useData } from '../../context/DataContext.jsx'
+import { getMember, getMemberBankDetails } from '../../services/memberService.js'
 import {
   formatDate,
   formatDateTime,
   formatNumber,
   formatVND,
   todayInputValue,
-} from '../utils/format.js'
-import { downloadQrSvg } from '../utils/qr.js'
-import { debtStatusMeta } from '../utils/selectors.js'
+} from '../../utils/format.js'
+import { downloadQrSvg } from '../../utils/qr.js'
+import { debtStatusMeta } from '../../utils/selectors.js'
 
 const VIEWS = ['detail', 'report', 'review', 'vietqr', 'qr', 'result']
 
@@ -99,13 +99,13 @@ export default function DebtModal() {
 
   const expense = expenses.find((item) => item.id === debt.expenseId)
   const group = getGroup(groupId)
-  const debtor = memberLookup[debt.from]
-  const receiver = memberLookup[debt.to]
+  const debtor = getMember(debt.from)
+  const receiver = getMember(debt.to)
   const isDebtor = debt.from === currentUserId
   const isReceiver = debt.to === currentUserId
   const meta = debtStatusMeta(debt.status)
   const receiverBank =
-    debt.to === currentUserId ? profile.bankDetails : memberBankDetails[debt.to]
+    debt.to === currentUserId ? profile.bankDetails : getMemberBankDetails(debt.to)
   const qrValue = `${receiverBank?.bankName ?? 'Bank'}|${receiverBank?.accountNumber ?? ''}|${debt.amount}|${message}`
 
   const handleReport = (event) => {

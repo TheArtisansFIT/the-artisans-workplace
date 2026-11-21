@@ -67,32 +67,37 @@ A reusable demo invite is available at `/join/HoiAn2026`.
 ## Project structure
 
 ```
-src/
-  components/
-    groups/     Expense, debt, and member tab content
-    layout/     App shell, auth layout, protected routes, brand
-    ui/         Buttons, fields, modals, notices, avatars, QR placeholder
-  context/      Auth and in-memory data providers
-  data/         Seed groups, members, expenses, debts, and bank details
-  modals/       Route-backed create/edit/detail dialogs
-  pages/        Route-level screens
-  styles/       Design tokens plus base, layout, component, and screen CSS
-  utils/        Formatting, selectors, equal splitting, QR placeholder
+components/
+  groups/     Expense, debt, and member tab content
+  layout/     App shell, auth layout, protected routes, brand
+  modals/     Route-backed create/edit/detail dialogs
+  ui/         Buttons, fields, modals, notices, avatars, QR placeholder
+context/      Auth and in-memory data providers
+data/         Seed groups, members, expenses, debts, and bank details
+pages/        Route-level screens
+services/     HTTP, auth, group, expense, debt, member, profile, and storage logic
+styles/       Design tokens plus base, layout, component, and screen CSS
+utils/        Formatting, selectors, equal splitting, QR placeholder
+App.jsx       Route table
+main.jsx      App entry point and provider setup
 ```
 
 ## Data and API integration
 
-Authentication, sessions and bank details now use the Flask API through
-`src/api/client.js`. `src/data/mockData.js` and `src/context/DataContext.jsx`
-remain the temporary data layer for groups, expenses and debts. Their working
-copy is persisted in `localStorage` under `splitnest.data.v1` so a refresh does
-not discard a demo session. To reset the demo, clear site data for
-`localhost:5173`.
+Authentication, sessions and bank details use the Flask API through
+`services/httpClient.js` and `services/authService.js`. Group, expense, debt,
+member and profile behavior is isolated in their respective services; those
+services currently use `data/seedData.js` as a local mock source.
+`context/DataContext.jsx` coordinates UI state and delegates domain operations
+to those services. The working copy is persisted in `localStorage` under
+`splitnest.data.v1` so a refresh does not discard a demo session. To reset the
+demo, clear site data for `localhost:5173`.
 
 The Vite dev server proxies `/api` to `http://127.0.0.1:5000`. Set
-`VITE_API_BASE_URL` to point at a different API origin. Replace the remaining
-actions in `DataContext.jsx` with `fetch` calls as the group, expense, debt and
-history endpoints are added. VietQR rendering is an illustrative local
+`VITE_API_BASE_URL` to point at a different API origin. Replace the mock
+implementations in `groupService.js`, `expenseService.js`,
+and `debtService.js` with API calls as the group, expense, debt and history
+endpoints are added. VietQR rendering is an illustrative local
 placeholder and should be replaced with a valid VietQR payload during that
 integration.
 

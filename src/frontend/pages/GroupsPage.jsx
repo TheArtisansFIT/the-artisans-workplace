@@ -8,7 +8,7 @@ import PageHeader from '../components/ui/PageHeader.jsx'
 import StatCard from '../components/ui/StatCard.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useData } from '../context/DataContext.jsx'
-import { memberLookup } from '../data/mockData.js'
+import { getMembers } from '../services/memberService.js'
 import { formatVND } from '../utils/format.js'
 import { groupTotal, personalBalance } from '../utils/selectors.js'
 
@@ -77,7 +77,7 @@ export default function GroupsPage() {
         <div className="group-grid">
           {myGroups.map((group) => {
             const balance = personalBalance(debts, group.id, currentUserId)
-            const groupMembers = group.memberIds.map((id) => memberLookup[id]).filter(Boolean)
+            const groupMembers = getMembers(group.memberIds)
             const total = groupTotal(expenses, group.id)
             const expenseCount = expenses.filter((expense) => expense.groupId === group.id).length
 

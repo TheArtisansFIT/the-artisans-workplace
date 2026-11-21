@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
-import Button from '../components/ui/Button.jsx'
-import Field from '../components/ui/Field.jsx'
-import Modal from '../components/ui/Modal.jsx'
-import Notice from '../components/ui/Notice.jsx'
-import { useData } from '../context/DataContext.jsx'
+import Button from '../ui/Button.jsx'
+import Field from '../ui/Field.jsx'
+import Modal from '../ui/Modal.jsx'
+import Notice from '../ui/Notice.jsx'
+import { useData } from '../../context/DataContext.jsx'
 
 export default function CreateGroupModal() {
   const navigate = useNavigate()

@@ -1,6 +1,7 @@
 /**
- * Temporary frontend data. Every collection is shaped so that it can later be
- * replaced by responses from the Flask REST API without changing the screens.
+ * Seed data for the local mock layer. Every collection is shaped so that it can
+ * later be replaced by responses from the Flask REST API without changing the
+ * screens. Access it through `services/` instead of importing it directly.
  */
 
 export const CURRENT_USER_ID = 'minh'
@@ -35,8 +36,6 @@ export const members = [
     joinedAt: '2026-10-21',
   },
 ]
-
-export const memberLookup = Object.fromEntries(members.map((member) => [member.id, member]))
 
 export const memberBankDetails = {
   minh: {

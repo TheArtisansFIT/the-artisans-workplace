@@ -5,7 +5,7 @@ import Badge from '../ui/Badge.jsx'
 import Button from '../ui/Button.jsx'
 import Notice from '../ui/Notice.jsx'
 import QrPlaceholder from '../ui/QrPlaceholder.jsx'
-import { memberLookup } from '../../data/mockData.js'
+import { getMember, getMembers } from '../../services/memberService.js'
 import { formatDate, formatVND } from '../../utils/format.js'
 import { groupExpenses } from '../../utils/selectors.js'
 
@@ -13,7 +13,7 @@ export default function MembersTab({ group, expenses, currentUserId }) {
   const [copied, setCopied] = useState(false)
   const [shared, setShared] = useState('')
   const inviteUrl = `${window.location.origin}/join/${group.inviteToken}`
-  const groupMembers = group.memberIds.map((id) => memberLookup[id]).filter(Boolean)
+  const groupMembers = getMembers(group.memberIds)
   const list = groupExpenses(expenses, group.id)
   const total = list.reduce((sum, expense) => sum + expense.amount, 0)
 
@@ -98,7 +98,7 @@ export default function MembersTab({ group, expenses, currentUserId }) {
             </div>
             <div className="summary-row">
               <span>Created by</span>
-              <strong>{memberLookup[group.organizerId]?.name ?? 'Member'}</strong>
+              <strong>{getMember(group.organizerId)?.name ?? 'Member'}</strong>
             </div>
             <div className="summary-row">
               <span>Created on</span>

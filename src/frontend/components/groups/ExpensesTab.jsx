@@ -5,7 +5,7 @@ import Button from '../ui/Button.jsx'
 import EmptyState from '../ui/EmptyState.jsx'
 import Notice from '../ui/Notice.jsx'
 import StatCard from '../ui/StatCard.jsx'
-import { memberLookup } from '../../data/mockData.js'
+import { getMember } from '../../services/memberService.js'
 import { formatDate, formatVND } from '../../utils/format.js'
 import { groupExpenses, groupTotal, personalBalance, userShare } from '../../utils/selectors.js'
 
@@ -57,7 +57,7 @@ export default function ExpensesTab({ group, expenses, debts, currentUserId, mem
                 </thead>
                 <tbody>
                   {list.map((expense) => {
-                    const payer = memberLookup[expense.paidBy]
+                    const payer = getMember(expense.paidBy)
                     return (
                       <tr key={expense.id}>
                         <td>

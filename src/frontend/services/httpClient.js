@@ -52,7 +52,7 @@ export function clearStoredToken() {
   remove(globalThis.sessionStorage, TOKEN_KEY)
 }
 
-async function request(path, { method = 'GET', body, token, auth = true } = {}) {
+export async function request(path, { method = 'GET', body, token, auth = true } = {}) {
   const headers = { Accept: 'application/json' }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
 
@@ -95,16 +95,4 @@ async function request(path, { method = 'GET', body, token, auth = true } = {}) 
   }
 
   return payload
-}
-
-export const api = {
-  register: (body) =>
-    request('/auth/register', { method: 'POST', body, auth: false }),
-  login: (body) => request('/auth/login', { method: 'POST', body, auth: false }),
-  logout: (token) => request('/auth/logout', { method: 'POST', token }),
-  me: () => request('/auth/me'),
-  saveBankDetails: (body) =>
-    request('/users/me/bank-details', { method: 'PUT', body }),
-  removeBankDetails: () =>
-    request('/users/me/bank-details', { method: 'DELETE' }),
 }

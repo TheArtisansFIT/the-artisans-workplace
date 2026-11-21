@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { authService } from '../services/authService.js'
 import {
-  api,
   clearStoredToken,
   getStoredToken,
   setStoredToken,
-} from '../api/client.js'
+} from '../services/httpClient.js'
 
 const STORAGE_KEY = 'splitnest.session'
 const AuthContext = createContext(null)
@@ -93,7 +93,7 @@ export function AuthProvider({ children }) {
     }
 
     let active = true
-    api
+    authService
       .me()
       .then((payload) => {
         if (active) updateUser(payload.user)
@@ -114,7 +114,7 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(
     async ({ email, password, remember = true }) => {
-      const session = await api.login({ email, password })
+      const session = await authService.login({ email, password })
       return applySession(session, remember)
     },
     [applySession],
@@ -122,7 +122,7 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(
     async ({ displayName, email, password }) => {
-      const session = await api.register({ displayName, email, password })
+      const session = await authService.register({ displayName, email, password })
       return applySession(session, true)
     },
     [applySession],
@@ -133,7 +133,7 @@ export function AuthProvider({ children }) {
     clearSession()
     if (!token) return
     try {
-      await api.logout(token)
+      await authService.logout(token)
     } catch {
       // The local session is already gone; the token expires on its own.
     }
@@ -141,14 +141,14 @@ export function AuthProvider({ children }) {
 
   const saveBankDetails = useCallback(
     async (bankDetails) => {
-      const payload = await api.saveBankDetails(bankDetails)
+      const payload = await authService.saveBankDetails(bankDetails)
       return updateUser(payload.user)
     },
     [updateUser],
   )
 
   const removeBankDetails = useCallback(async () => {
-    const payload = await api.removeBankDetails()
+    const payload = await authService.removeBankDetails()
     return updateUser(payload.user)
   }, [updateUser])
 

@@ -5,7 +5,8 @@ import Avatar from '../components/ui/Avatar.jsx'
 import Button from '../components/ui/Button.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useData } from '../context/DataContext.jsx'
-import { inviteTokenLookup, memberLookup } from '../data/mockData.js'
+import { findGroupByInviteToken } from '../services/groupService.js'
+import { getMember } from '../services/memberService.js'
 
 export default function JoinGroupPage() {
   const { inviteToken } = useParams()
@@ -13,8 +14,7 @@ export default function JoinGroupPage() {
   const { groups, currentUserId, joinGroup } = useData()
   const navigate = useNavigate()
 
-  const mappedGroupId = inviteTokenLookup[inviteToken]
-  const group = groups.find((item) => item.id === mappedGroupId || item.inviteToken === inviteToken)
+  const group = findGroupByInviteToken(groups, inviteToken)
   const isMember = group?.memberIds.includes(currentUserId) ?? false
   const currentPath = `/join/${inviteToken}`
   const authLink = `/login?redirect=${encodeURIComponent(currentPath)}`
@@ -63,7 +63,7 @@ export default function JoinGroupPage() {
                 <strong>{group.name}</strong>
                 <span>
                   Private group · {group.memberIds.length} members · Invited by{' '}
-                  {memberLookup[group.organizerId]?.name ?? 'a member'}
+                  {getMember(group.organizerId)?.name ?? 'a member'}
                 </span>
               </div>
             </div>
