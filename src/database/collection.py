@@ -38,11 +38,15 @@ groups_validator = {
     "required": ["creator_id", "display_name", "max_member", "created_at"],
     "properties": {
         "creator_id": {
-            "bsonType": "objectId",
+            "bsonType": "string",
         },
         "display_name": {
             "bsonType": "string",
             "maxLength": 100
+        },
+        "description": {
+            "bsonType": "string",
+            "maxLength": 200
         },
         "max_member": {
             "bsonType": "int",
@@ -63,7 +67,7 @@ group_invitations_validator = {
             "maxLength": 15
         },
         "group_id": {
-            "bsonType": "objectId"
+            "bsonType": "string"
         },
         "duration": {
             "bsonType": "int",
@@ -77,17 +81,21 @@ group_invitations_validator = {
 
 group_memberships_validator = {
     "bsonType": "object",
-    "required": ["group_id", "user_id", "role", "created_at"],
+    "required": ["group_id", "user_id", "role", "status", "created_at"],
     "properties": {
         "group_id": {
-            "bsonType": "objectId"
+            "bsonType": "string"
         },
         "user_id": {
-            "bsonType": "objectId"
+            "bsonType": "string"
         },
         "role": {
             "bsonType": "string",
-            "enum": ["organizer", "member"]
+            "enum": ["Organizer", "Member"]
+        },
+        "status": {
+            "bsonType": "string",
+            "enum": ["Active", "Left", "Removed"]
         },
         "created_at": {
             "bsonType": "date"
@@ -111,13 +119,13 @@ expenses_validator = {
             "bsonType": "date"
         },
         "creator_id": {
-            "bsonType": "objectId"
+            "bsonType": "string"
         },
         "creditor_id": {
-            "bsonType": "objectId"
+            "bsonType": "string"
         },
         "group_id": {
-            "bsonType": "objectId"
+            "bsonType": "string"
         }
     }
 }
@@ -127,10 +135,10 @@ repayment_obligations_validator = {
     "required": ["expense_id", "debtor_id", "share_amount", "status"],
     "properties": {
         "expense_id": {
-            "bsonType": "objectId"
+            "bsonType": "string"
         },
         "debtor_id": {
-            "bsonType": "objectId"
+            "bsonType": "string"
         },
         "share_amount": {
             "bsonType": "long",
@@ -149,10 +157,10 @@ repayment_reports_validator = {
     "required": ["expense_id", "debtor_id", "created_at", "status"],
     "properties": {
         "expense_id": {
-            "bsonType": "objectId"
+            "bsonType": "string"
         },
         "debtor_id": {
-            "bsonType": "objectId"
+            "bsonType": "string"
         },
         "created_at": {
             "bsonType": "date"

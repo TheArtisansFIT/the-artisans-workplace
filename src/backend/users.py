@@ -1,4 +1,4 @@
-"""Profile and bank-details endpoints (UC-03 / FR-05, FR-06)."""
+"""Profile and bank-details endpoints (UC-04 / FR-05, FR-06)."""
 
 from __future__ import annotations
 

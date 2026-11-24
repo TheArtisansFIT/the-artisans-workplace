@@ -6,7 +6,8 @@ from werkzeug.exceptions import HTTPException
 
 from .auth import auth_bp, seed_demo_user
 from .errors import ApiError
-from .store import build_user_store
+from .groups import groups_bp
+from .store import build_group_store, build_user_store
 from .users import users_bp
 
 
@@ -23,6 +24,10 @@ def create_app(test_config: dict | None = None) -> Flask:
         ),
         MONGO_URI=os.environ.get("MONGO_URI") or os.environ.get("MONGODB_URI"),
         MONGO_DB_NAME=os.environ.get("MONGO_DB_NAME", "splitnest"),
+        GROUP_INVITATION_DURATION_DAYS=int(
+            os.environ.get("GROUP_INVITATION_DURATION_DAYS", "7")
+        ),
+        GROUP_MAX_MEMBER=int(os.environ.get("GROUP_MAX_MEMBER", "50")),
         USER_STORE=os.environ.get("USER_STORE", "").strip().lower(),
         SEED_DEMO_USER=os.environ.get("SEED_DEMO_USER", "true").lower()
         in {"1", "true", "yes"},
@@ -39,8 +44,15 @@ def create_app(test_config: dict | None = None) -> Flask:
     store = build_user_store(app)
     app.extensions["user_store"] = store
 
+    group_store = build_group_store(app)
+    app.extensions["group_store"] = group_store
+
+    if app.config.get("SEED_DEMO_USER"):
+        seed_demo_user(store)
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(users_bp)
+    app.register_blueprint(groups_bp)
 
     @app.get("/health")
     def health() -> Response:
