@@ -38,6 +38,8 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     store = build_user_store(app)
     app.extensions["user_store"] = store
+    if app.config.get("SEED_DEMO_USER"):
+        seed_demo_user(store)
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(users_bp)
