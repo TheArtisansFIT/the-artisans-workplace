@@ -288,6 +288,7 @@ class MongoGroupStore:
     def __init__(self, uri: str, database_name: str = "splitnest") -> None:
         try:
             from pymongo import MongoClient
+            from pymongo.errors import OperationFailure
         except ImportError as exc:  # pragma: no cover - depends on deployment setup
             raise RuntimeError(
                 "MONGO_URI is set but pymongo is not installed. "
@@ -307,8 +308,11 @@ class MongoGroupStore:
             self._invitations = database["group_invitations"]
 
             self._groups.create_index("creator_id")
-            self._memberships.create_index(
+            self._ensure_index(
+                self._memberships,
                 [("group_id", 1), ("user_id", 1)],
+                name="uniq_active_membership",
+                error_type=OperationFailure,
                 unique=True,
                 partialFilterExpression={"status": "Active"},
             )
@@ -322,6 +326,30 @@ class MongoGroupStore:
                 "Could not connect to MongoDB or prepare the group collections. "
                 "Check MONGO_URI, network access, and database credentials."
             ) from exc
+
+    @staticmethod
+    def _ensure_index(
+        collection: Any,
+        keys: Any,
+        *,
+        name: str,
+        error_type: type[Exception],
+        **options: Any,
+    ) -> None:
+        """Create an index, replacing legacy same-key indexes with other options."""
+        wanted = keys if isinstance(keys, list) else [(keys, 1)]
+        for existing_name, spec in collection.index_information().items():
+            if existing_name in {"_id_", name}:
+                continue
+            if spec.get("key") == wanted:
+                collection.drop_index(existing_name)
+        try:
+            collection.create_index(keys, name=name, **options)
+        except error_type as exc:
+            if getattr(exc, "code", None) not in {85, 86}:
+                raise
+            collection.drop_index(name)
+            collection.create_index(keys, name=name, **options)
 
     @staticmethod
     def _to_group(document: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -430,7 +458,15 @@ class MongoGroupStore:
 def build_group_store(app: Flask) -> GroupStore:
     uri = (app.config.get("MONGO_URI") or "").strip()
     if uri:
-        return MongoGroupStore(uri, app.config.get("MONGO_DB_NAME", "splitnest"))
+        try:
+            return MongoGroupStore(uri, app.config.get("MONGO_DB_NAME", "splitnest"))
+        except RuntimeError:
+            raise
+        except Exception as exc:
+            raise RuntimeError(
+                "Could not initialize the MongoDB group store. "
+                "Check MONGO_URI, network access, and database credentials."
+            ) from exc
     if app.testing or app.config.get("USER_STORE") == "memory":
         return MemoryGroupStore()
     raise RuntimeError(

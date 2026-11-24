@@ -23,6 +23,21 @@ def create_collection(name, validator):
                 "recreate the development database, then rerun this script."
             ) from exc
 
+def ensure_index(collection, keys, *, name, **options):
+    wanted = keys if isinstance(keys, list) else [(keys, 1)]
+    for existing_name, spec in collection.index_information().items():
+        if existing_name in {"_id_", name}:
+            continue
+        if spec.get("key") == wanted:
+            collection.drop_index(existing_name)
+    try:
+        collection.create_index(keys, name=name, **options)
+    except OperationFailure as exc:
+        if getattr(exc, "code", None) not in {85, 86}:
+            raise
+        collection.drop_index(name)
+        collection.create_index(keys, name=name, **options)
+
 if __name__ == "__main__":
     ping_server()
 
@@ -38,8 +53,10 @@ if __name__ == "__main__":
     db.group_invitations.create_index("join_code", unique=True)
     db.group_invitations.create_index("group_id", unique=True)
    
-    db.group_memberships.create_index(
+    ensure_index(
+        db.group_memberships,
         [("group_id", 1), ("user_id", 1)],
+        name="uniq_active_membership",
         unique=True,
         partialFilterExpression={"status": "Active"},
     )
