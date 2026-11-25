@@ -13,20 +13,34 @@ export default function Modal({
 }) {
   const generatedId = useId()
   const titleId = labelledBy || `modal-title-${generatedId}`
-  const closeRef = useRef(null)
+  const dialogRef = useRef(null)
+  const onCloseRef = useRef(onClose)
+
+  // Keep the latest handler without re-running the mount effect.
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   useEffect(() => {
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') onCloseRef.current()
     }
     document.addEventListener('keydown', onKeyDown)
+
+    // Do not steal focus from an `autoFocus` field. Only move focus into the
+    // dialog when nothing inside it is focused yet.
+    const dialog = dialogRef.current
     const previousActive = document.activeElement
-    closeRef.current?.focus()
+    if (dialog && !dialog.contains(document.activeElement)) {
+      const firstFocusable = dialog.querySelector('input, select, textarea, button, [href]')
+      ;(firstFocusable ?? dialog).focus()
+    }
+
     return () => {
       document.removeEventListener('keydown', onKeyDown)
       previousActive?.focus?.()
     }
-  }, [onClose])
+  }, [])
 
   return createPortal(
     <div
@@ -36,12 +50,14 @@ export default function Modal({
       }}
     >
       <section
+        ref={dialogRef}
         className={`modal ${size === 'wide' ? 'modal--wide' : ''} ${
           size === 'full' ? 'modal--full' : ''
         }`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        tabIndex={-1}
       >
         <header className="modal__head">
           <div>
@@ -51,7 +67,6 @@ export default function Modal({
             {description && <p className="modal__description">{description}</p>}
           </div>
           <button
-            ref={closeRef}
             type="button"
             className="modal__close"
             onClick={onClose}

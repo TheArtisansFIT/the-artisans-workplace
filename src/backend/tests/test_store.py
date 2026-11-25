@@ -10,6 +10,7 @@ class FakeCollection:
     def __init__(self) -> None:
         self.documents: dict[str, dict[str, Any]] = {}
         self.indexes: list[tuple[str, bool]] = []
+        self.updates: list[dict[str, Any]] = []
 
     def create_index(self, field: str, unique: bool = False) -> None:
         self.indexes.append((field, unique))
@@ -35,12 +36,21 @@ class FakeCollection:
             raise pymongo.errors.DuplicateKeyError("duplicate email")
         self.documents[document["_id"]] = dict(document)
 
-    def update_one(self, query: dict[str, Any], update: dict[str, Any]) -> None:
+    def find_one_and_update(
+        self,
+        query: dict[str, Any],
+        update: dict[str, Any],
+        return_document: Any,
+    ) -> dict[str, Any] | None:
+        self.updates.append(update)
         document = self.documents.get(query["_id"])
-        if document:
-            document.update(update.get("$set", {}))
-            for field in update.get("$unset", {}):
-                document.pop(field, None)
+        if document is None:
+            return None
+
+        document.update(update.get("$set", {}))
+        for field in update.get("$unset", {}):
+            document.pop(field, None)
+        return dict(document)
 
 
 class FakeDatabase:
@@ -156,6 +166,38 @@ def test_mongo_store_maps_profile_updates_without_persisting_session_version(
         "account_number": "12345678",
         "account_holder": "MINH LE",
     }
+    assert len(collection.updates) == 1
 
     store.update_user("usr_profile", {"bankDetails": None})
     assert "bank_details" not in collection.documents["usr_profile"]
+    assert len(collection.updates) == 2
+
+
+def test_mongo_store_skips_database_write_for_runtime_only_changes(monkeypatch) -> None:
+    collection = FakeCollection()
+
+    class FakeClientConstructor(FakeMongoClient):
+        def __init__(self, *args, **kwargs) -> None:
+            super().__init__(collection)
+
+    monkeypatch.setattr(pymongo, "MongoClient", FakeClientConstructor)
+    store = MongoUserStore("mongodb://localhost", "splitnest")
+    store.create_user(
+        {
+            "id": "usr_runtime",
+            "displayName": "Minh",
+            "email": "minh@example.com",
+            "passwordHash": "secure-hash",
+            "memberSince": "2026-11-21",
+            "bankDetails": None,
+            "sessionVersion": 0,
+        }
+    )
+
+    user = store.update_user("usr_runtime", {"sessionVersion": 1})
+
+    assert user is not None
+    assert user["id"] == "usr_runtime"
+    assert collection.updates == []
+    assert "sessionVersion" not in collection.documents["usr_runtime"]
+    assert "session_version" not in collection.documents["usr_runtime"]

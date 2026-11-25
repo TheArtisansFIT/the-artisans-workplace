@@ -66,7 +66,7 @@ class MongoUserStore:
 
     def __init__(self, uri: str, database_name: str = "splitnest") -> None:
         try:
-            from pymongo import MongoClient
+            from pymongo import MongoClient, ReturnDocument
             from pymongo.errors import DuplicateKeyError
         except ImportError as exc:  # pragma: no cover - depends on deployment setup
             raise RuntimeError(
@@ -75,6 +75,7 @@ class MongoUserStore:
             ) from exc
 
         self._duplicate_key_error = DuplicateKeyError
+        self._return_document_after = ReturnDocument.AFTER
         try:
             self._client = MongoClient(
                 uri,
@@ -170,8 +171,6 @@ class MongoUserStore:
         for key, value in changes.items():
             if key in {"sessionVersion", "session_version"}:
                 # Session versions are runtime auth state, not user data stored in MongoDB.
-                unset_fields["sessionVersion"] = ""
-                unset_fields["session_version"] = ""
                 continue
             mongo_key = field_names.get(key, key)
             if key == "bankDetails" and not value:
@@ -189,8 +188,15 @@ class MongoUserStore:
             update["$set"] = mongo_changes
         if unset_fields:
             update["$unset"] = unset_fields
-        self._users.update_one({"_id": user_id}, update)
-        return self.find_by_id(user_id)
+        if not update:
+            return self.find_by_id(user_id)
+
+        document = self._users.find_one_and_update(
+            {"_id": user_id},
+            update,
+            return_document=self._return_document_after,
+        )
+        return self._to_user(document)
 
 
 def build_user_store(app: Flask) -> UserStore:
