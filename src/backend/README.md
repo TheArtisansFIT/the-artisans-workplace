@@ -71,9 +71,10 @@ python -m pytest
 The suite uses Flask's test client and an in-memory test store, so it runs
 without starting MongoDB or the API server.
 
-## Account API (UC-01, UC-02, UC-03)
+## Account API (UC-01 to UC-04)
 
-The backend implements UC-01 registration, UC-02 sign-in, and UC-03 sign-out.
+The backend implements UC-01 registration, UC-02 sign-in, UC-03 sign-out, and
+UC-04 bank details.
 Accounts are stored in MongoDB when `MONGO_URI` is configured. Registration
 normalizes email addresses, rejects duplicates, hashes passwords, and
 authenticates the user immediately. Sign-in verifies the saved password hash.
@@ -142,6 +143,67 @@ Errors use a consistent shape, with field messages when validation fails:
 }
 ```
 
+## Group API (UC-05)
+
+`POST /api/groups` creates a private group for the signed-in user. The creator
+is recorded as the active organizer, and an initial invitation is created in
+the same operation. Group data is stored in the `groups`, `group_memberships`,
+and `group_invitations` collections.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/groups` | Create a private group |
+
+The request accepts a required `name` (2-100 characters) and an optional
+`description` (up to 200 characters).
+
+```json
+{
+  "name": "Da Lat trip 2026",
+  "description": "A long weekend with shared food and coffee."
+}
+```
+
+Successful response:
+
+```json
+{
+  "group": {
+    "id": "grp_…",
+    "name": "Da Lat trip 2026",
+    "description": "A long weekend with shared food and coffee.",
+    "creatorId": "usr_…",
+    "maxMember": 50,
+    "createdAt": "2026-11-24T10:00:00+00:00",
+    "memberIds": ["usr_…"],
+    "invitation": {
+      "joinCode": "4f2c9a1b7d",
+      "durationDays": 7,
+      "createdAt": "2026-11-24T10:00:00+00:00",
+      "expiresAt": "2026-12-01T10:00:00+00:00"
+    }
+  }
+}
+```
+
+The response does not include any user's bank details. Protected group routes
+expect `Authorization: Bearer <token>`.
+
+## Data model note
+
+Application-generated identifiers are strings (`usr_...`, `grp_...`, and so
+on). MongoDB `_id` values and every reference field such as `creator_id`,
+`group_id`, `user_id`, `expense_id`, and `debtor_id` must use
+`bsonType: "string"` in the collection validators. This matches the string user
+IDs already used by `MongoUserStore` and the UUID-style identifiers in the PA3
+data model.
+
+The validators were previously inconsistent: some records expected MongoDB
+`ObjectId` values while the backend generated string IDs. All reference fields
+now use strings. `src/database/initialize.py` refreshes validators on existing
+collections with `collMod`; if an existing development database has documents
+that violate the new schema, drop and recreate it before rerunning the script.
+
 ## Configuration
 
 | Variable | Default | Purpose |
@@ -150,6 +212,8 @@ Errors use a consistent shape, with field messages when validation fails:
 | `SESSION_MAX_AGE_SECONDS` | `604800` (7 days) | Session lifetime |
 | `MONGO_URI` / `MONGODB_URI` | unset | MongoDB connection string; required unless explicitly using the memory store |
 | `MONGO_DB_NAME` | `splitnest` | Database name for MongoDB |
+| `GROUP_INVITATION_DURATION_DAYS` | `7` | Validity period of a newly created group invitation |
+| `GROUP_MAX_MEMBER` | `50` | Member capacity stored when a group is created |
 | `USER_STORE` | unset | Set to `memory` only for temporary, non-persistent local data |
 | `SEED_DEMO_USER` | `true` | Create the sample account when it is missing |
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed browser origins |

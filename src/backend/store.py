@@ -66,7 +66,7 @@ class MongoUserStore:
 
     def __init__(self, uri: str, database_name: str = "splitnest") -> None:
         try:
-            from pymongo import MongoClient, ReturnDocument
+            from pymongo import MongoClient
             from pymongo.errors import DuplicateKeyError
         except ImportError as exc:  # pragma: no cover - depends on deployment setup
             raise RuntimeError(
@@ -75,7 +75,6 @@ class MongoUserStore:
             ) from exc
 
         self._duplicate_key_error = DuplicateKeyError
-        self._return_document_after = ReturnDocument.AFTER
         try:
             self._client = MongoClient(
                 uri,
@@ -162,41 +161,42 @@ class MongoUserStore:
             raise DuplicateEmailError from exc
         return {**user, "email": document["email"]}
 
-    def update_user(self, user_id: str, changes: dict[str, Any]) -> dict[str, Any] | None:
-        field_names = {
-            "bankDetails": "bank_details",
-        }
-        mongo_changes: dict[str, Any] = {}
-        unset_fields: dict[str, str] = {}
-        for key, value in changes.items():
-            if key in {"sessionVersion", "session_version"}:
-                # Session versions are runtime auth state, not user data stored in MongoDB.
-                continue
-            mongo_key = field_names.get(key, key)
-            if key == "bankDetails" and not value:
-                unset_fields[mongo_key] = ""
-                continue
-            if key == "bankDetails" and value:
-                value = {
-                    "bank_name": value["bankName"],
-                    "account_number": value["accountNumber"],
-                    "account_holder": value["accountHolder"],
-                }
-            mongo_changes[mongo_key] = value
-        update: dict[str, Any] = {}
-        if mongo_changes:
-            update["$set"] = mongo_changes
-        if unset_fields:
-            update["$unset"] = unset_fields
-        if not update:
-            return self.find_by_id(user_id)
 
-        document = self._users.find_one_and_update(
-            {"_id": user_id},
-            update,
-            return_document=self._return_document_after,
-        )
-        return self._to_user(document)
+def update_user(self, user_id: str, changes: dict[str, Any]) -> dict[str, Any] | None:
+    field_names = { "bankDetails": "bank_details",}
+
+    mongo_changes: dict[str, Any] = {}
+    unset_fields: dict[str, str] = {}
+
+    for key, value in changes.items():
+        mongo_key = field_names.get(key, key)
+
+        if key == "bankDetails" and not value:
+            unset_fields[mongo_key] = ""
+            continue
+
+        if key == "bankDetails" and value:
+            value = {
+                "bank_name": value["bankName"],
+                "account_number": value["accountNumber"],
+                "account_holder": value["accountHolder"],
+            }
+
+        mongo_changes[mongo_key] = value
+
+    update: dict[str, Any] = {}
+
+    if mongo_changes:
+        update["$set"] = mongo_changes
+
+    if unset_fields:
+        update["$unset"] = unset_fields
+
+    if update:
+        self._users.update_one({"_id": user_id}, update)
+
+    return self.find_by_id(user_id)
+
 
 
 def build_user_store(app: Flask) -> UserStore:
@@ -208,4 +208,274 @@ def build_user_store(app: Flask) -> UserStore:
     raise RuntimeError(
         "MongoDB is not configured. Set MONGO_URI (or MONGODB_URI) to persist "
         "accounts, or explicitly set USER_STORE=memory for temporary local data."
+    )
+
+
+class GroupStore(Protocol):
+    def create_group(
+        self,
+        group: dict[str, Any],
+        membership: dict[str, Any],
+        invitation: dict[str, Any],
+    ) -> None: ...
+
+    def find_group(self, group_id: str) -> dict[str, Any] | None: ...
+
+    def find_membership(
+        self, group_id: str, user_id: str
+    ) -> dict[str, Any] | None: ...
+
+    def find_invitation_for_group(self, group_id: str) -> dict[str, Any] | None: ...
+
+
+class MemoryGroupStore:
+    """Thread-safe group store used for local development and tests."""
+
+    def __init__(self) -> None:
+        self._groups: dict[str, dict[str, Any]] = {}
+        self._memberships: dict[str, dict[str, Any]] = {}
+        self._invitations: dict[str, dict[str, Any]] = {}
+        self._lock = threading.RLock()
+
+    def create_group(
+        self,
+        group: dict[str, Any],
+        membership: dict[str, Any],
+        invitation: dict[str, Any],
+    ) -> None:
+        with self._lock:
+            self._groups[group["id"]] = dict(group)
+            self._memberships[membership["id"]] = dict(membership)
+            self._invitations[invitation["joinCode"]] = dict(invitation)
+
+    def find_group(self, group_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            group = self._groups.get(group_id)
+            return dict(group) if group else None
+
+    def find_membership(
+        self, group_id: str, user_id: str
+    ) -> dict[str, Any] | None:
+        with self._lock:
+            for membership in self._memberships.values():
+                if (
+                    membership["groupId"] == group_id
+                    and membership["userId"] == user_id
+                ):
+                    return dict(membership)
+        return None
+
+    def find_invitation_for_group(self, group_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            for invitation in self._invitations.values():
+                if invitation["groupId"] == group_id:
+                    return dict(invitation)
+        return None
+
+
+def _parse_timestamp(value: str) -> datetime:
+    parsed = datetime.fromisoformat(value)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def _iso_timestamp(value: Any) -> str:
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.isoformat()
+    return str(value or "")
+
+
+class MongoGroupStore:
+    """MongoDB-backed group store for the deployed application."""
+
+    def __init__(self, uri: str, database_name: str = "splitnest") -> None:
+        try:
+            from pymongo import MongoClient
+            from pymongo.errors import OperationFailure
+        except ImportError as exc:  # pragma: no cover - depends on deployment setup
+            raise RuntimeError(
+                "MONGO_URI is set but pymongo is not installed. "
+                "Run 'pip install -r src/backend/requirements.txt'."
+            ) from exc
+
+        try:
+            self._client = MongoClient(
+                uri,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+            )
+            self._client.admin.command("ping")
+            database = self._client[database_name]
+            self._groups = database["groups"]
+            self._memberships = database["group_memberships"]
+            self._invitations = database["group_invitations"]
+
+            self._groups.create_index("creator_id")
+            self._ensure_index(
+                self._memberships,
+                [("group_id", 1), ("user_id", 1)],
+                name="uniq_active_membership",
+                error_type=OperationFailure,
+                unique=True,
+                partialFilterExpression={"status": "Active"},
+            )
+            self._memberships.create_index("user_id")
+            self._invitations.create_index("join_code", unique=True)
+            self._invitations.create_index("group_id", unique=True)
+        except Exception as exc:
+            if hasattr(self, "_client"):
+                self._client.close()
+            raise RuntimeError(
+                "Could not connect to MongoDB or prepare the group collections. "
+                "Check MONGO_URI, network access, and database credentials."
+            ) from exc
+
+    @staticmethod
+    def _ensure_index(
+        collection: Any,
+        keys: Any,
+        *,
+        name: str,
+        error_type: type[Exception],
+        **options: Any,
+    ) -> None:
+        """Create an index, replacing legacy same-key indexes with other options."""
+        wanted = keys if isinstance(keys, list) else [(keys, 1)]
+        for existing_name, spec in collection.index_information().items():
+            if existing_name in {"_id_", name}:
+                continue
+            if spec.get("key") == wanted:
+                collection.drop_index(existing_name)
+        try:
+            collection.create_index(keys, name=name, **options)
+        except error_type as exc:
+            if getattr(exc, "code", None) not in {85, 86}:
+                raise
+            collection.drop_index(name)
+            collection.create_index(keys, name=name, **options)
+
+    @staticmethod
+    def _to_group(document: dict[str, Any] | None) -> dict[str, Any] | None:
+        if document is None:
+            return None
+        return {
+            "id": str(document["_id"]),
+            "name": document.get("display_name", ""),
+            "description": document.get("description", ""),
+            "creatorId": str(document.get("creator_id", "")),
+            "maxMember": int(document.get("max_member", 0)),
+            "createdAt": _iso_timestamp(document.get("created_at")),
+        }
+
+    @staticmethod
+    def _to_membership(document: dict[str, Any] | None) -> dict[str, Any] | None:
+        if document is None:
+            return None
+        return {
+            "id": str(document["_id"]),
+            "groupId": str(document.get("group_id", "")),
+            "userId": str(document.get("user_id", "")),
+            "role": document.get("role", "Organizer"),
+            "status": document.get("status", "Active"),
+            "createdAt": _iso_timestamp(document.get("created_at")),
+        }
+
+    @staticmethod
+    def _to_invitation(document: dict[str, Any] | None) -> dict[str, Any] | None:
+        if document is None:
+            return None
+        return {
+            "joinCode": document.get("join_code", ""),
+            "groupId": str(document.get("group_id", "")),
+            "durationDays": int(document.get("duration", 0)),
+            "createdAt": _iso_timestamp(document.get("created_at")),
+        }
+
+    @staticmethod
+    def _to_group_document(group: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "_id": group["id"],
+            "creator_id": group["creatorId"],
+            "display_name": group["name"],
+            "description": group.get("description", ""),
+            "max_member": int(group["maxMember"]),
+            "created_at": _parse_timestamp(group["createdAt"]),
+        }
+
+    @staticmethod
+    def _to_membership_document(membership: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "_id": membership["id"],
+            "group_id": membership["groupId"],
+            "user_id": membership["userId"],
+            "role": membership["role"],
+            "status": membership["status"],
+            "created_at": _parse_timestamp(membership["createdAt"]),
+        }
+
+    @staticmethod
+    def _to_invitation_document(invitation: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "join_code": invitation["joinCode"],
+            "group_id": invitation["groupId"],
+            "duration": int(invitation["durationDays"]),
+            "created_at": _parse_timestamp(invitation["createdAt"]),
+        }
+
+    def create_group(
+        self,
+        group: dict[str, Any],
+        membership: dict[str, Any],
+        invitation: dict[str, Any],
+    ) -> None:
+        with self._client.start_session() as session:
+            with session.start_transaction():
+                self._groups.insert_one(
+                    self._to_group_document(group), session=session
+                )
+                self._memberships.insert_one(
+                    self._to_membership_document(membership), session=session
+                )
+                self._invitations.insert_one(
+                    self._to_invitation_document(invitation), session=session
+                )
+
+    def find_group(self, group_id: str) -> dict[str, Any] | None:
+        return self._to_group(self._groups.find_one({"_id": group_id}))
+
+    def find_membership(
+        self, group_id: str, user_id: str
+    ) -> dict[str, Any] | None:
+        return self._to_membership(
+            self._memberships.find_one(
+                {"group_id": group_id, "user_id": user_id, "status": "Active"}
+            )
+        )
+
+    def find_invitation_for_group(self, group_id: str) -> dict[str, Any] | None:
+        return self._to_invitation(
+            self._invitations.find_one({"group_id": group_id})
+        )
+
+
+def build_group_store(app: Flask) -> GroupStore:
+    uri = (app.config.get("MONGO_URI") or "").strip()
+    if uri:
+        try:
+            return MongoGroupStore(uri, app.config.get("MONGO_DB_NAME", "splitnest"))
+        except RuntimeError:
+            raise
+        except Exception as exc:
+            raise RuntimeError(
+                "Could not initialize the MongoDB group store. "
+                "Check MONGO_URI, network access, and database credentials."
+            ) from exc
+    if app.testing or app.config.get("USER_STORE") == "memory":
+        return MemoryGroupStore()
+    raise RuntimeError(
+        "MongoDB is not configured. Set MONGO_URI (or MONGODB_URI) to persist "
+        "groups, or explicitly set USER_STORE=memory for temporary local data."
     )
