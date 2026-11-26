@@ -4,12 +4,12 @@ from flask import Flask, Response, jsonify, request
 from pymongo.errors import PyMongoError
 from werkzeug.exceptions import HTTPException
 
-from .auth import auth_bp, seed_demo_user
+from .auth import auth_bp
 from .errors import ApiError
 from .groups import groups_bp
 from .store import build_group_store, build_user_store
 from .users import users_bp
-
+from database.connection import db
 
 def _split_origins(value: str) -> list[str]:
     return [origin.strip() for origin in value.split(",") if origin.strip()]
@@ -47,8 +47,6 @@ def create_app(test_config: dict | None = None) -> Flask:
     group_store = build_group_store(app)
     app.extensions["group_store"] = group_store
 
-    if app.config.get("SEED_DEMO_USER"):
-        seed_demo_user(store)
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(users_bp)

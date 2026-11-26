@@ -1,7 +1,16 @@
 users_validator = {
     "bsonType": "object",
-    "required": ["email", "display_name", "hashed_password", "created_at"],
+    "required": [
+        "id",
+        "email",
+        "display_name",
+        "hashed_password",
+        "created_at",
+    ],
     "properties": {
+        "id": {
+            "bsonType": "string"
+        },
         "email": {
             "bsonType": "string",
             "maxLength": 255,
@@ -9,6 +18,7 @@ users_validator = {
         },
         "display_name": {
             "bsonType": "string",
+            "minLength": 2,
             "maxLength": 100
         },
         "hashed_password": {
@@ -33,12 +43,22 @@ users_validator = {
     }
 }
 
+
 groups_validator = {
     "bsonType": "object",
-    "required": ["creator_id", "display_name", "max_member", "created_at"],
+    "required": [
+        "id",
+        "creator_id",
+        "display_name",
+        "max_member",
+        "created_at"
+    ],
     "properties": {
+        "id": {
+            "bsonType": "string"
+        },
         "creator_id": {
-            "bsonType": "string",
+            "bsonType": "string"
         },
         "display_name": {
             "bsonType": "string",
@@ -58,10 +78,20 @@ groups_validator = {
     }
 }
 
+
 group_invitations_validator = {
-    "bsonType": "object", 
-    "required": ["join_code", "group_id", "duration", "created_at"],
+    "bsonType": "object",
+    "required": [
+        "id",
+        "join_code",
+        "group_id",
+        "duration",
+        "created_at"
+    ],
     "properties": {
+        "id": {
+            "bsonType": "string"
+        },
         "join_code": {
             "bsonType": "string",
             "maxLength": 15
@@ -79,10 +109,21 @@ group_invitations_validator = {
     }
 }
 
+
 group_memberships_validator = {
     "bsonType": "object",
-    "required": ["group_id", "user_id", "role", "status", "created_at"],
+    "required": [
+        "id",
+        "group_id",
+        "user_id",
+        "role",
+        "status",
+        "created_at"
+    ],
     "properties": {
+        "id": {
+            "bsonType": "string"
+        },
         "group_id": {
             "bsonType": "string"
         },
@@ -102,77 +143,3 @@ group_memberships_validator = {
         }
     }
 }
-
-expenses_validator = {
-    "bsonType": "object",
-    "required": ["description", "total_amount", "created_at", "creator_id", "creditor_id", "group_id"],
-    "properties": {
-        "description": {
-            "bsonType": "string",
-            "maxLength": 255
-        },
-        "total_amount": {
-            "bsonType": "long",
-            "minimum": 1
-        },
-        "created_at": {
-            "bsonType": "date"
-        },
-        "creator_id": {
-            "bsonType": "string"
-        },
-        "creditor_id": {
-            "bsonType": "string"
-        },
-        "group_id": {
-            "bsonType": "string"
-        }
-    }
-}
-
-repayment_obligations_validator = {
-    "bsonType": "object",
-    "required": ["expense_id", "debtor_id", "share_amount", "status"],
-    "properties": {
-        "expense_id": {
-            "bsonType": "string"
-        },
-        "debtor_id": {
-            "bsonType": "string"
-        },
-        "share_amount": {
-            "bsonType": "long",
-            "minimum": 1
-        },
-        "status": {
-            "bsonType": "string",
-            "maxLength": 30,
-            "enum": ["Outstanding", "Pending Confirmation", "Confirmed"]
-        }
-    }
-}
-
-repayment_reports_validator = {
-    "bsonType": "object",
-    "required": ["expense_id", "debtor_id", "created_at", "status"],
-    "properties": {
-        "expense_id": {
-            "bsonType": "string"
-        },
-        "debtor_id": {
-            "bsonType": "string"
-        },
-        "created_at": {
-            "bsonType": "date"
-        },
-        "decided_at": {
-            "bsonType": "date"
-        },
-        "status": {
-            "bsonType": "string",
-            "maxLength": 20,
-            "enum": ["Pending", "Confirmed", "Rejected"]
-        }
-    }
-}
-

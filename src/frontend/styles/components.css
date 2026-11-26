@@ -253,6 +253,7 @@
   position: absolute;
   top: 50%;
   right: 6px;
+  transform: translateY(-50%);
   display: grid;
   place-items: center;
   width: 36px;

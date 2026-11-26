@@ -161,36 +161,42 @@ class MongoUserStore:
             raise DuplicateEmailError from exc
         return {**user, "email": document["email"]}
 
-    def update_user(self, user_id: str, changes: dict[str, Any]) -> dict[str, Any] | None:
-        field_names = {
-            "bankDetails": "bank_details",
-        }
-        mongo_changes: dict[str, Any] = {}
-        unset_fields: dict[str, str] = {}
-        for key, value in changes.items():
-            if key in {"sessionVersion", "session_version"}:
-                # Session versions are runtime auth state, not user data stored in MongoDB.
-                unset_fields["sessionVersion"] = ""
-                unset_fields["session_version"] = ""
-                continue
-            mongo_key = field_names.get(key, key)
-            if key == "bankDetails" and not value:
-                unset_fields[mongo_key] = ""
-                continue
-            if key == "bankDetails" and value:
-                value = {
-                    "bank_name": value["bankName"],
-                    "account_number": value["accountNumber"],
-                    "account_holder": value["accountHolder"],
-                }
-            mongo_changes[mongo_key] = value
-        update: dict[str, Any] = {}
-        if mongo_changes:
-            update["$set"] = mongo_changes
-        if unset_fields:
-            update["$unset"] = unset_fields
+
+def update_user(self, user_id: str, changes: dict[str, Any]) -> dict[str, Any] | None:
+    field_names = { "bankDetails": "bank_details",}
+
+    mongo_changes: dict[str, Any] = {}
+    unset_fields: dict[str, str] = {}
+
+    for key, value in changes.items():
+        mongo_key = field_names.get(key, key)
+
+        if key == "bankDetails" and not value:
+            unset_fields[mongo_key] = ""
+            continue
+
+        if key == "bankDetails" and value:
+            value = {
+                "bank_name": value["bankName"],
+                "account_number": value["accountNumber"],
+                "account_holder": value["accountHolder"],
+            }
+
+        mongo_changes[mongo_key] = value
+
+    update: dict[str, Any] = {}
+
+    if mongo_changes:
+        update["$set"] = mongo_changes
+
+    if unset_fields:
+        update["$unset"] = unset_fields
+
+    if update:
         self._users.update_one({"_id": user_id}, update)
-        return self.find_by_id(user_id)
+
+    return self.find_by_id(user_id)
+
 
 
 def build_user_store(app: Flask) -> UserStore:
