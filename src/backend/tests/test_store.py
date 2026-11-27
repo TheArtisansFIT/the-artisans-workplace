@@ -1,11 +1,17 @@
-from datetime import timezone
+from datetime import datetime, timezone
 from typing import Any
 
 import pymongo
 import pytest
 from flask import Flask
 
-from backend.store import MongoGroupStore, MongoUserStore, build_group_store
+from backend.store import (
+    DuplicateMembershipError,
+    MemoryGroupStore,
+    MongoGroupStore,
+    MongoUserStore,
+    build_group_store,
+)
 
 
 class FakeCollection:
@@ -119,6 +125,33 @@ class FakeGroupCollection:
             ),
             None,
         )
+
+    def find(self, query: dict[str, Any]) -> list[dict[str, Any]]:
+        return [
+            dict(document)
+            for document in self.documents.values()
+            if all(document.get(field) == value for field, value in query.items())
+        ]
+
+    def insert_one(self, document: dict[str, Any]) -> None:
+        self._check_unique(document)
+        self.documents[document["_id"]] = dict(document)
+
+    def _check_unique(self, document: dict[str, Any]) -> None:
+        for spec in self.indexes.values():
+            if not spec.get("unique"):
+                continue
+            fields = [field for field, _ in spec.get("key", [])]
+            partial = spec.get("partialFilterExpression")
+            if partial and not all(
+                document.get(field) == value for field, value in partial.items()
+            ):
+                continue
+            if any(
+                all(existing.get(field) == document.get(field) for field in fields)
+                for existing in self.documents.values()
+            ):
+                raise pymongo.errors.DuplicateKeyError("duplicate key")
 
 
 class FakeGroupDatabase:
@@ -310,3 +343,189 @@ def test_mongo_store_maps_profile_updates_without_persisting_session_version(
 
     store.update_user("usr_profile", {"bankDetails": None})
     assert "bank_details" not in collection.documents["usr_profile"]
+
+
+def test_mongo_group_store_finds_invitation_by_join_code(monkeypatch) -> None:
+    client, collections = make_group_client()
+    collections["group_invitations"].documents["inv_1"] = {
+        "join_code": "abc123",
+        "group_id": "grp_1",
+        "duration": 7,
+        "created_at": datetime(2026, 11, 24, tzinfo=timezone.utc),
+    }
+    monkeypatch.setattr(pymongo, "MongoClient", lambda *args, **kwargs: client)
+    store = MongoGroupStore("mongodb://localhost", "splitnest")
+
+    invitation = store.find_invitation_by_join_code("abc123")
+
+    assert invitation is not None
+    assert invitation["joinCode"] == "abc123"
+    assert invitation["groupId"] == "grp_1"
+    assert invitation["durationDays"] == 7
+    assert store.find_invitation_by_join_code("missing") is None
+
+
+def test_mongo_group_store_lists_active_memberships_in_order(monkeypatch) -> None:
+    memberships = FakeGroupCollection()
+    memberships.documents.update(
+        {
+            "mem_late": {
+                "_id": "mem_late",
+                "group_id": "grp_1",
+                "user_id": "usr_late",
+                "role": "Member",
+                "status": "Active",
+                "created_at": datetime(2026, 11, 2, tzinfo=timezone.utc),
+            },
+            "mem_organizer": {
+                "_id": "mem_organizer",
+                "group_id": "grp_1",
+                "user_id": "usr_organizer",
+                "role": "Organizer",
+                "status": "Active",
+                "created_at": datetime(2026, 12, 1, tzinfo=timezone.utc),
+            },
+            "mem_early": {
+                "_id": "mem_early",
+                "group_id": "grp_1",
+                "user_id": "usr_early",
+                "role": "Member",
+                "status": "Active",
+                "created_at": datetime(2026, 11, 1, tzinfo=timezone.utc),
+            },
+            "mem_left": {
+                "_id": "mem_left",
+                "group_id": "grp_1",
+                "user_id": "usr_left",
+                "role": "Member",
+                "status": "Left",
+                "created_at": datetime(2026, 10, 1, tzinfo=timezone.utc),
+            },
+        }
+    )
+    client, _ = make_group_client(memberships)
+    monkeypatch.setattr(pymongo, "MongoClient", lambda *args, **kwargs: client)
+    store = MongoGroupStore("mongodb://localhost", "splitnest")
+
+    active = store.list_active_memberships("grp_1")
+
+    assert [membership["id"] for membership in active] == [
+        "mem_organizer",
+        "mem_early",
+        "mem_late",
+    ]
+
+
+def test_mongo_group_store_rejects_duplicate_active_membership(
+    monkeypatch,
+) -> None:
+    client, _ = make_group_client()
+    monkeypatch.setattr(pymongo, "MongoClient", lambda *args, **kwargs: client)
+    store = MongoGroupStore("mongodb://localhost", "splitnest")
+
+    store.create_membership(
+        {
+            "id": "mem_1",
+            "groupId": "grp_1",
+            "userId": "usr_1",
+            "role": "Member",
+            "status": "Active",
+            "createdAt": "2026-11-24T10:00:00+00:00",
+        }
+    )
+
+    with pytest.raises(DuplicateMembershipError):
+        store.create_membership(
+            {
+                "id": "mem_2",
+                "groupId": "grp_1",
+                "userId": "usr_1",
+                "role": "Member",
+                "status": "Active",
+                "createdAt": "2026-11-25T10:00:00+00:00",
+            }
+        )
+
+    store.create_membership(
+        {
+            "id": "mem_3",
+            "groupId": "grp_1",
+            "userId": "usr_1",
+            "role": "Member",
+            "status": "Left",
+            "createdAt": "2026-11-26T10:00:00+00:00",
+        }
+    )
+
+
+def test_memory_group_store_invitation_and_active_membership_helpers() -> None:
+    store = MemoryGroupStore()
+    store.create_group(
+        {
+            "id": "grp_1",
+            "name": "Trip",
+            "description": "",
+            "creatorId": "usr_owner",
+            "maxMember": 50,
+            "createdAt": "2026-11-24T10:00:00+00:00",
+        },
+        {
+            "id": "mem_owner",
+            "groupId": "grp_1",
+            "userId": "usr_owner",
+            "role": "Organizer",
+            "status": "Active",
+            "createdAt": "2026-11-24T10:00:00+00:00",
+        },
+        {
+            "joinCode": "abc123",
+            "groupId": "grp_1",
+            "durationDays": 7,
+            "createdAt": "2026-11-24T10:00:00+00:00",
+        },
+    )
+    store.create_membership(
+        {
+            "id": "mem_old",
+            "groupId": "grp_1",
+            "userId": "usr_1",
+            "role": "Member",
+            "status": "Left",
+            "createdAt": "2026-11-20T10:00:00+00:00",
+        }
+    )
+    store.create_membership(
+        {
+            "id": "mem_new",
+            "groupId": "grp_1",
+            "userId": "usr_1",
+            "role": "Member",
+            "status": "Active",
+            "createdAt": "2026-11-25T10:00:00+00:00",
+        }
+    )
+
+    invitation = store.find_invitation_by_join_code("abc123")
+    assert invitation is not None
+    assert invitation["groupId"] == "grp_1"
+    assert store.find_invitation_by_join_code("missing") is None
+
+    assert [item["id"] for item in store.list_active_memberships("grp_1")] == [
+        "mem_owner",
+        "mem_new",
+    ]
+    active = store.find_membership("grp_1", "usr_1")
+    assert active is not None
+    assert active["id"] == "mem_new"
+
+    with pytest.raises(DuplicateMembershipError):
+        store.create_membership(
+            {
+                "id": "mem_duplicate",
+                "groupId": "grp_1",
+                "userId": "usr_1",
+                "role": "Member",
+                "status": "Active",
+                "createdAt": "2026-11-26T10:00:00+00:00",
+            }
+        )

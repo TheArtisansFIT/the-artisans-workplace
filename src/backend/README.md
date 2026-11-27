@@ -189,6 +189,65 @@ Successful response:
 The response does not include any user's bank details. Protected group routes
 expect `Authorization: Bearer <token>`.
 
+## Group invitations and members (UC-06 to UC-08)
+
+These routes implement sharing an invitation, previewing it before joining, and
+listing active group members. The frontend still uses seed data for these
+screens; wiring to the API is pending.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/groups/{groupId}/invitation` | Organizer fetches the join code, link, and expiry |
+| `GET` | `/api/invitations/{joinCode}` | Preview the group for a signed-in user |
+| `POST` | `/api/invitations/{joinCode}/join` | Join, rejoin, or confirm an active membership |
+| `GET` | `/api/groups/{groupId}/members` | List active members for an active member |
+
+Only an active organizer can fetch a group's invitation. The response supplies
+a `joinLink` built from `PUBLIC_APP_URL`; the frontend can encode that link into
+a QR code, so the backend does not depend on a QR library.
+
+```json
+{
+  "invitation": {
+    "groupId": "grp_…",
+    "joinCode": "4f2c9a1b7d",
+    "joinLink": "http://localhost:5173/join/4f2c9a1b7d",
+    "durationDays": 7,
+    "createdAt": "2026-11-24T10:00:00+00:00",
+    "expiresAt": "2026-12-01T10:00:00+00:00",
+    "isExpired": false
+  }
+}
+```
+
+Any signed-in user can preview a valid invitation. The preview exposes only the
+group name, description, creator, and member count. Unknown and expired codes
+both return `404 not_found` without group data.
+
+Joining returns `201` with a new active membership, or `200` when the caller is
+already an active member. A former member who rejoins gets a new active
+membership while the old `Left`/`Removed` record is preserved. Membership, join,
+and member-list responses never include bank details.
+
+The member list is ordered organizer first, then by join time and membership ID.
+Only `Active` memberships appear, and emails are included but never bank details:
+
+```json
+{
+  "members": [
+    {
+      "membershipId": "mem_…",
+      "userId": "usr_…",
+      "displayName": "Minh",
+      "email": "minh@example.com",
+      "role": "Organizer",
+      "status": "Active",
+      "joinedAt": "2026-11-24T10:00:00+00:00"
+    }
+  ]
+}
+```
+
 ## Data model note
 
 Application-generated identifiers are strings (`usr_...`, `grp_...`, and so
@@ -214,6 +273,7 @@ that violate the new schema, drop and recreate it before rerunning the script.
 | `MONGO_DB_NAME` | `splitnest` | Database name for MongoDB |
 | `GROUP_INVITATION_DURATION_DAYS` | `7` | Validity period of a newly created group invitation |
 | `GROUP_MAX_MEMBER` | `50` | Member capacity stored when a group is created |
+| `PUBLIC_APP_URL` | `http://localhost:5173` | Base URL used to build invitation join links |
 | `USER_STORE` | unset | Set to `memory` only for temporary, non-persistent local data |
 | `SEED_DEMO_USER` | `true` | Create the sample account when it is missing |
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed browser origins |

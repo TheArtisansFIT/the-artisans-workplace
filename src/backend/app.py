@@ -7,6 +7,7 @@ from werkzeug.exceptions import HTTPException
 from .auth import auth_bp, seed_demo_user
 from .errors import ApiError
 from .groups import groups_bp
+from .invitations import invitations_bp
 from .store import build_group_store, build_user_store
 from .users import users_bp
 
@@ -28,6 +29,9 @@ def create_app(test_config: dict | None = None) -> Flask:
             os.environ.get("GROUP_INVITATION_DURATION_DAYS", "7")
         ),
         GROUP_MAX_MEMBER=int(os.environ.get("GROUP_MAX_MEMBER", "50")),
+        PUBLIC_APP_URL=os.environ.get(
+            "PUBLIC_APP_URL", "http://localhost:5173"
+        ),
         USER_STORE=os.environ.get("USER_STORE", "").strip().lower(),
         SEED_DEMO_USER=os.environ.get("SEED_DEMO_USER", "true").lower()
         in {"1", "true", "yes"},
@@ -53,6 +57,7 @@ def create_app(test_config: dict | None = None) -> Flask:
     app.register_blueprint(auth_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(groups_bp)
+    app.register_blueprint(invitations_bp)
 
     @app.get("/health")
     def health() -> Response:

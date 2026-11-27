@@ -13,6 +13,10 @@ class DuplicateEmailError(Exception):
     """Raised when a registration uses an email address that already exists."""
 
 
+class DuplicateMembershipError(Exception):
+    """Raised when a user already has an active membership in a group."""
+
+
 class UserStore(Protocol):
     def find_by_email(self, email: str) -> dict[str, Any] | None: ...
 
@@ -221,6 +225,12 @@ class GroupStore(Protocol):
 
     def find_invitation_for_group(self, group_id: str) -> dict[str, Any] | None: ...
 
+    def find_invitation_by_join_code(self, join_code: str) -> dict[str, Any] | None: ...
+
+    def list_active_memberships(self, group_id: str) -> list[dict[str, Any]]: ...
+
+    def create_membership(self, membership: dict[str, Any]) -> None: ...
+
 
 class MemoryGroupStore:
     """Thread-safe group store used for local development and tests."""
@@ -255,6 +265,7 @@ class MemoryGroupStore:
                 if (
                     membership["groupId"] == group_id
                     and membership["userId"] == user_id
+                    and membership["status"] == "Active"
                 ):
                     return dict(membership)
         return None
@@ -265,6 +276,45 @@ class MemoryGroupStore:
                 if invitation["groupId"] == group_id:
                     return dict(invitation)
         return None
+
+    def find_invitation_by_join_code(self, join_code: str) -> dict[str, Any] | None:
+        with self._lock:
+            invitation = self._invitations.get(join_code)
+            return dict(invitation) if invitation else None
+
+    def list_active_memberships(self, group_id: str) -> list[dict[str, Any]]:
+        with self._lock:
+            memberships = [
+                dict(membership)
+                for membership in self._memberships.values()
+                if membership["groupId"] == group_id
+                and membership["status"] == "Active"
+            ]
+        return _sort_memberships(memberships)
+
+    def create_membership(self, membership: dict[str, Any]) -> None:
+        with self._lock:
+            if membership["status"] == "Active" and any(
+                existing["groupId"] == membership["groupId"]
+                and existing["userId"] == membership["userId"]
+                and existing["status"] == "Active"
+                for existing in self._memberships.values()
+            ):
+                raise DuplicateMembershipError
+            self._memberships[membership["id"]] = dict(membership)
+
+
+def _sort_memberships(
+    memberships: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return sorted(
+        memberships,
+        key=lambda membership: (
+            0 if membership.get("role") == "Organizer" else 1,
+            membership.get("createdAt", ""),
+            membership.get("id", ""),
+        ),
+    )
 
 
 def _parse_timestamp(value: str) -> datetime:
@@ -288,13 +338,14 @@ class MongoGroupStore:
     def __init__(self, uri: str, database_name: str = "splitnest") -> None:
         try:
             from pymongo import MongoClient
-            from pymongo.errors import OperationFailure
+            from pymongo.errors import DuplicateKeyError, OperationFailure
         except ImportError as exc:  # pragma: no cover - depends on deployment setup
             raise RuntimeError(
                 "MONGO_URI is set but pymongo is not installed. "
                 "Run 'pip install -r src/backend/requirements.txt'."
             ) from exc
 
+        self._duplicate_key_error = DuplicateKeyError
         try:
             self._client = MongoClient(
                 uri,
@@ -453,6 +504,32 @@ class MongoGroupStore:
         return self._to_invitation(
             self._invitations.find_one({"group_id": group_id})
         )
+
+    def find_invitation_by_join_code(self, join_code: str) -> dict[str, Any] | None:
+        return self._to_invitation(
+            self._invitations.find_one({"join_code": join_code})
+        )
+
+    def list_active_memberships(self, group_id: str) -> list[dict[str, Any]]:
+        documents = self._memberships.find(
+            {"group_id": group_id, "status": "Active"}
+        )
+        memberships = [
+            membership
+            for membership in (
+                self._to_membership(document) for document in documents
+            )
+            if membership is not None
+        ]
+        return _sort_memberships(memberships)
+
+    def create_membership(self, membership: dict[str, Any]) -> None:
+        try:
+            self._memberships.insert_one(
+                self._to_membership_document(membership)
+            )
+        except self._duplicate_key_error as exc:
+            raise DuplicateMembershipError from exc
 
 
 def build_group_store(app: Flask) -> GroupStore:
