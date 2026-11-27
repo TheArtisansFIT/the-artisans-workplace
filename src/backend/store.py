@@ -5,6 +5,8 @@ from __future__ import annotations
 import threading
 from datetime import date, datetime, time, timezone
 from typing import Any, Protocol
+from bson import BSON
+from bson.int64 import Int64
 
 from flask import Flask
 
@@ -206,7 +208,7 @@ def build_user_store(app: Flask) -> UserStore:
     if app.testing or app.config.get("USER_STORE") == "memory":
         return MemoryUserStore()
     raise RuntimeError(
-        "MongoDB is not configured. Set MONGO_URI (or MONGODB_URI) to persist "
+        "MongoDB is not configured. Set MONGO_URI (or MONGO_URI) to persist "
         "accounts, or explicitly set USER_STORE=memory for temporary local data."
     )
 
@@ -444,7 +446,17 @@ class MongoGroupStore:
                 )
 
     def find_group(self, group_id: str) -> dict[str, Any] | None:
-        return self._to_group(self._groups.find_one({"_id": group_id}))
+        document = self._groups.find_one({"_id": group_id})
+        if document is None:
+            return None
+        group = self._to_group(document)
+        group["memberIds"] = [
+            str(m["user_id"])
+            for m in self._memberships.find(
+                {"group_id": group_id, "status": "Active"}
+            )
+        ]
+        return group
 
     def find_membership(
         self, group_id: str, user_id: str
@@ -459,6 +471,150 @@ class MongoGroupStore:
         return self._to_invitation(
             self._invitations.find_one({"group_id": group_id})
         )
+
+
+class ExpenseStore(Protocol):
+    def create_expense(
+        self,
+        expense: dict[str, Any],
+        obligations: list[dict[str, Any]],
+    ) -> None: ...
+
+    def find_expense(self, expense_id: str) -> dict[str, Any] | None: ...
+
+    def list_expenses(self, group_id: str) -> list[dict[str, Any]]: ...
+
+    def list_obligations_for_expense(
+        self, expense_id: str
+    ) -> list[dict[str, Any]]: ...
+
+    def update_expense(
+        self, expense_id: str, changes: dict[str, Any]
+    ) -> dict[str, Any] | None: ...
+
+    def delete_expense(self, expense_id: str) -> None: ...
+
+
+def _split_shares(amount: int, participant_ids: list[str]) -> dict[str, int]:
+    """Split a whole-VND amount equally, distributing leftover dong one by one
+    in participant order, matching the frontend split rules."""
+    total = max(0, int(amount))
+    ids = list(dict.fromkeys(participant_ids))
+    if not ids:
+        return {}
+    base = total // len(ids)
+    remainder = total % len(ids)
+    return {
+        member_id: base + (1 if index < remainder else 0)
+        for index, member_id in enumerate(ids)
+    }
+
+
+def _build_obligations(
+    expense: dict[str, Any], shares: dict[str, int], now_iso: str
+) -> list[dict[str, Any]]:
+    import secrets
+
+    paid_by = expense["paidBy"]
+    obligations: list[dict[str, Any]] = []
+    for member_id in expense["participantIds"]:
+        if member_id == paid_by:
+            continue
+        share = shares.get(member_id, 0)
+        if share <= 0:
+            continue
+        obligations.append(
+            {
+                "id": f"obg_{secrets.token_hex(8)}",
+                "expenseId": expense["id"],
+                "debtorId": member_id,
+                "creditorId": paid_by,
+                "amount": share,
+                "status": "unpaid",
+                "createdAt": now_iso,
+            }
+        )
+    return obligations
+
+
+class MemoryExpenseStore:
+    """Thread-safe expense store used for local development and tests."""
+
+    def __init__(self) -> None:
+        self._expenses: dict[str, dict[str, Any]] = {}
+        self._obligations: dict[str, dict[str, Any]] = {}
+        self._lock = threading.RLock()
+
+    def create_expense(
+        self,
+        expense: dict[str, Any],
+        obligations: list[dict[str, Any]],
+    ) -> None:
+        with self._lock:
+            self._expenses[expense["id"]] = dict(expense)
+            for obligation in obligations:
+                self._obligations[obligation["id"]] = dict(obligation)
+
+    def find_expense(self, expense_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            expense = self._expenses.get(expense_id)
+            return dict(expense) if expense else None
+
+    def list_expenses(self, group_id: str) -> list[dict[str, Any]]:
+        with self._lock:
+            expenses = [
+                dict(expense)
+                for expense in self._expenses.values()
+                if expense["groupId"] == group_id
+            ]
+        expenses.sort(
+            key=lambda expense: expense.get("createdAt", ""), reverse=True
+        )
+        return expenses
+
+    def list_obligations_for_expense(
+        self, expense_id: str
+    ) -> list[dict[str, Any]]:
+        with self._lock:
+            return [
+                dict(obligation)
+                for obligation in self._obligations.values()
+                if obligation["expenseId"] == expense_id
+            ]
+
+    def update_expense(
+        self, expense_id: str, changes: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        with self._lock:
+            expense = self._expenses.get(expense_id)
+            if expense is None:
+                return None
+            expense.update(changes)
+            self._expenses[expense_id] = expense
+
+            self._obligations = {
+                oid: obligation
+                for oid, obligation in self._obligations.items()
+                if obligation["expenseId"] != expense_id
+            }
+            shares = _split_shares(
+                int(expense["amount"]), list(expense["participantIds"])
+            )
+            obligations = _build_obligations(
+                expense, shares, expense.get("createdAt", "")
+            )
+            for obligation in obligations:
+                self._obligations[obligation["id"]] = dict(obligation)
+            return dict(expense)
+
+    def delete_expense(self, expense_id: str) -> None:
+        with self._lock:
+            self._expenses.pop(expense_id, None)
+            self._obligations = {
+                oid: obligation
+                for oid, obligation in self._obligations.items()
+                if obligation["expenseId"] != expense_id
+            }
 
 
 def build_group_store(app: Flask) -> GroupStore:
@@ -476,6 +632,164 @@ def build_group_store(app: Flask) -> GroupStore:
     if app.testing or app.config.get("USER_STORE") == "memory":
         return MemoryGroupStore()
     raise RuntimeError(
-        "MongoDB is not configured. Set MONGO_URI (or MONGODB_URI) to persist "
+        "MongoDB is not configured. Set MONGO_URI (or MONGO_URI) to persist "
         "groups, or explicitly set USER_STORE=memory for temporary local data."
+    )
+
+
+class MongoExpenseStore:
+    """MongoDB-backed expense store for the deployed application.
+
+    Reuses the existing database connection from ``database.connection``
+    instead of creating a new MongoClient.
+    """
+
+    def __init__(self) -> None:
+        from database.connection import db
+
+        self._expenses = db["expenses"]
+        self._obligations = db["repayment_obligations"]
+        self._expenses.create_index([("group_id", 1), ("created_at", 1)])
+        self._expenses.create_index("creator_id")
+        self._obligations.create_index(
+            [("expense_id", 1), ("debtor_id", 1)], unique=True
+        )
+        self._obligations.create_index([("debtor_id", 1), ("status", 1)])
+
+    @staticmethod
+    def _to_expense(document: dict[str, Any] | None) -> dict[str, Any] | None:
+        if document is None:
+            return None
+        return {
+            "id": str(document["_id"]),
+            "groupId": str(document.get("group_id", "")),
+            "description": document.get("description", ""),
+            "amount": int(document.get("total_amount", document.get("amount", 0))),
+            "date": document.get("date", ""),
+            "paidBy": str(document.get("creditor_id", document.get("paid_by", ""))),
+            "participantIds": [
+                str(member_id) for member_id in document.get("participant_ids", [])
+            ],
+            "createdBy": str(document.get("creator_id", document.get("created_by", ""))),
+            "createdAt": _iso_timestamp(document.get("created_at")),
+            "locked": bool(document.get("locked", False)),
+        }
+
+    @staticmethod
+    def _to_obligation(document: dict[str, Any] | None) -> dict[str, Any] | None:
+        if document is None:
+            return None
+        return {
+            "id": str(document["_id"]),
+            "expenseId": str(document.get("expense_id", "")),
+            "debtorId": str(document.get("debtor_id", "")),
+            "creditorId": str(document.get("creditor_id", "")),
+            "amount": int(document.get("amount", 0)),
+            "status": document.get("status", "unpaid"),
+            "createdAt": _iso_timestamp(document.get("created_at")),
+        }
+
+    @staticmethod
+    def _to_expense_document(expense: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "_id": expense["id"],
+            "id": expense["id"],
+            "group_id": expense["groupId"],
+            "description": expense["description"],
+            "total_amount": Int64(expense["amount"]),
+            "date": expense["date"],
+            "creditor_id": expense["paidBy"],
+            "participant_ids": list(expense["participantIds"]),
+            "creator_id": expense["createdBy"],
+            "created_at": _parse_timestamp(expense["createdAt"]),
+            "locked": bool(expense.get("locked", False)),
+        }
+
+    @staticmethod
+    def _to_obligation_document(obligation: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "_id": obligation["id"],
+            "id": obligation["id"],
+            "expense_id": obligation["expenseId"],
+            "debtor_id": obligation["debtorId"],
+            "creditor_id": obligation["creditorId"],
+            "amount": int(obligation["amount"]),
+            "status": obligation["status"],
+            "created_at": _parse_timestamp(obligation["createdAt"]),
+        }
+
+    def create_expense(
+        self,
+        expense: dict[str, Any],
+        obligations: list[dict[str, Any]],
+    ) -> None:
+        self._expenses.insert_one(self._to_expense_document(expense))
+        for obligation in obligations:
+            self._obligations.insert_one(self._to_obligation_document(obligation))
+
+    def find_expense(self, expense_id: str) -> dict[str, Any] | None:
+        return self._to_expense(self._expenses.find_one({"_id": expense_id}))
+
+    def list_expenses(self, group_id: str) -> list[dict[str, Any]]:
+        return [
+            self._to_expense(document)
+            for document in self._expenses.find(
+                {"group_id": group_id}
+            ).sort("created_at", -1)
+        ]
+
+    def list_obligations_for_expense(
+        self, expense_id: str
+    ) -> list[dict[str, Any]]:
+        return [
+            self._to_obligation(document)
+            for document in self._obligations.find({"expense_id": expense_id})
+        ]
+
+    def update_expense(
+        self, expense_id: str, changes: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        expense = self.find_expense(expense_id)
+        if expense is None:
+            return None
+        updated = {**expense, **changes}
+        expense_document = self._to_expense_document(updated)
+        expense_document.pop("_id", None)
+        self._expenses.update_one(
+            {"_id": expense_id},
+            {"$set": expense_document},
+        )
+        self._obligations.delete_many({"expense_id": expense_id})
+        shares = _split_shares(
+            int(updated["amount"]), list(updated["participantIds"])
+        )
+        obligations = _build_obligations(
+            updated, shares, updated.get("createdAt", "")
+        )
+        for obligation in obligations:
+            self._obligations.insert_one(self._to_obligation_document(obligation))
+        return self.find_expense(expense_id)
+
+    def delete_expense(self, expense_id: str) -> None:
+        self._expenses.delete_one({"_id": expense_id})
+        self._obligations.delete_many({"expense_id": expense_id})
+
+
+def build_expense_store(app: Flask) -> ExpenseStore:
+    uri = (app.config.get("MONGO_URI") or "").strip()
+    if uri:
+        try:
+            return MongoExpenseStore()
+        except RuntimeError:
+            raise
+        except Exception as exc:
+            raise RuntimeError(
+                "Could not initialize the MongoDB expense store. "
+                "Check MONGO_URI, network access, and database credentials."
+            ) from exc
+    if app.testing or app.config.get("USER_STORE") == "memory":
+        return MemoryExpenseStore()
+    raise RuntimeError(
+        "MongoDB is not configured. Set MONGO_URI (or MONGO_URI) to persist "
+        "expenses, or explicitly set USER_STORE=memory for temporary local data."
     )

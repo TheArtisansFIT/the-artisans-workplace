@@ -1,4 +1,10 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env from project root
+ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
+load_dotenv(ENV_PATH)
 
 from flask import Flask, Response, jsonify, request
 from pymongo.errors import PyMongoError
@@ -6,10 +12,12 @@ from werkzeug.exceptions import HTTPException
 
 from .auth import auth_bp
 from .errors import ApiError
+from .expenses import expenses_bp
 from .groups import groups_bp
-from .store import build_group_store, build_user_store
+from .store import build_expense_store, build_group_store, build_user_store
 from .users import users_bp
-from database.connection import db
+from database.connection import db, ping_server
+
 
 def _split_origins(value: str) -> list[str]:
     return [origin.strip() for origin in value.split(",") if origin.strip()]
@@ -22,7 +30,10 @@ def create_app(test_config: dict | None = None) -> Flask:
         SESSION_MAX_AGE_SECONDS=int(
             os.environ.get("SESSION_MAX_AGE_SECONDS", str(60 * 60 * 24 * 7))
         ),
-        MONGO_URI=os.environ.get("MONGO_URI") or os.environ.get("MONGODB_URI"),
+        MONGO_URI=(
+            os.environ.get("MONGODB_URI")
+            or os.environ.get("MONGO_URI")
+        ),
         MONGO_DB_NAME=os.environ.get("MONGO_DB_NAME", "splitnest"),
         GROUP_INVITATION_DURATION_DAYS=int(
             os.environ.get("GROUP_INVITATION_DURATION_DAYS", "7")
@@ -40,17 +51,26 @@ def create_app(test_config: dict | None = None) -> Flask:
     )
     if test_config:
         app.config.update(test_config)
+    print("MONGO_URI loaded:", bool(app.config.get("MONGO_URI")))
+    print("MONGO_DB_NAME:", app.config.get("MONGO_DB_NAME"))
+    print("USER_STORE:", app.config.get("USER_STORE"))
 
+    print("Actual database:", db.name)
+    if app.config.get("MONGO_URI"):
+        ping_server()
     store = build_user_store(app)
     app.extensions["user_store"] = store
 
     group_store = build_group_store(app)
     app.extensions["group_store"] = group_store
 
+    expense_store = build_expense_store(app)
+    app.extensions["expense_store"] = expense_store
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(groups_bp)
+    app.register_blueprint(expenses_bp)
 
     @app.get("/health")
     def health() -> Response:

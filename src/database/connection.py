@@ -5,13 +5,13 @@ from bson.codec_options import CodecOptions
 from datetime import timezone
 
 client = MongoClient(
-    os.getenv("MONGODB_URI"),
+    os.getenv("MONGODB_URI") or os.getenv("MONGO_URI"),
     server_api=ServerApi("1")
 )
 
 codec_options = CodecOptions(tz_aware=True, tzinfo=timezone.utc)
 
-db = client["splitnest"].with_options(
+db = client[os.getenv("MONGO_DB_NAME", "splitnest")].with_options(
     codec_options=codec_options
 )
 

@@ -12,6 +12,8 @@ export default function CreateGroupModal() {
   const { createGroup } = useData()
   const [values, setValues] = useState({ name: '', description: '' })
   const [errors, setErrors] = useState({})
+  const [submitError, setSubmitError] = useState('')
+  const [isCreating, setIsCreating] = useState(false)
 
   const close = () => navigate('/groups')
 
@@ -21,8 +23,9 @@ export default function CreateGroupModal() {
     setErrors((current) => ({ ...current, [name]: '' }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    setSubmitError('')
     const nextErrors = {}
     if (!values.name.trim()) {
       nextErrors.name = 'Give your group a name.'
@@ -35,8 +38,15 @@ export default function CreateGroupModal() {
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
-    const group = createGroup(values)
-    navigate(`/groups/${group.id}?tab=members`, { replace: true })
+    setIsCreating(true)
+    try {
+      const group = await createGroup(values)
+      navigate(`/groups/${group.id}?tab=members`, { replace: true })
+    } catch (error) {
+      setSubmitError(error.message || 'Could not create this group. Please try again.')
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   return (
@@ -49,13 +59,24 @@ export default function CreateGroupModal() {
           <Button variant="ghost" onClick={close}>
             Cancel
           </Button>
-          <Button type="submit" form="create-group-form" icon={Plus}>
+          <Button
+            type="submit"
+            form="create-group-form"
+            icon={Plus}
+            loading={isCreating}
+            disabled={isCreating}
+          >
             Create group
           </Button>
         </>
       }
     >
       <form id="create-group-form" onSubmit={handleSubmit} noValidate>
+        {submitError && (
+          <Notice tone="error" role="alert" style={{ marginBottom: 18 }}>
+            {submitError}
+          </Notice>
+        )}
         <Field
           label="Group name"
           htmlFor="group-name"

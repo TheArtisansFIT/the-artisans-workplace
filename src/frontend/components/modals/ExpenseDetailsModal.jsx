@@ -14,8 +14,10 @@ import { debtStatusMeta } from '../../utils/selectors.js'
 export default function ExpenseDetailsModal() {
   const { groupId, expenseId } = useParams()
   const navigate = useNavigate()
-  const { getGroup, expenses, debts, deleteExpense, currentUserId } = useData()
+  const { getGroup, expenses, debts, deleteExpense, currentUserId, profile } = useData()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
   const group = getGroup(groupId)
   const expense = expenses.find((item) => item.id === expenseId)
 
@@ -29,7 +31,7 @@ export default function ExpenseDetailsModal() {
     )
   }
 
-  const payer = getMember(expense.paidBy)
+  const payer = getMember(expense.paidBy, { id: currentUserId, name: profile.displayName })
   const participantDebts = debts.filter(
     (debt) => debt.expenseId === expense.id && debt.to === expense.paidBy,
   )
@@ -37,9 +39,17 @@ export default function ExpenseDetailsModal() {
   const equalShare = Math.floor(expense.amount / expense.participantIds.length)
   const unpaidCount = participantDebts.filter((debt) => debt.status !== 'settled').length
 
-  const handleDelete = () => {
-    deleteExpense(expense.id)
-    close()
+  const handleDelete = async () => {
+    setDeleteError('')
+    setIsDeleting(true)
+    try {
+      await deleteExpense(expense.id)
+      close()
+    } catch (error) {
+      setDeleteError(error.message || 'Could not delete this expense. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   if (confirmDelete) {
@@ -53,7 +63,13 @@ export default function ExpenseDetailsModal() {
             <Button variant="outline" onClick={() => setConfirmDelete(false)}>
               Cancel
             </Button>
-            <Button variant="danger" icon={Trash2} onClick={handleDelete}>
+            <Button
+              variant="danger"
+              icon={Trash2}
+              onClick={handleDelete}
+              loading={isDeleting}
+              disabled={isDeleting}
+            >
               Delete expense
             </Button>
           </>
@@ -63,6 +79,11 @@ export default function ExpenseDetailsModal() {
           Deleting <strong>“{expense.description}”</strong> also removes the{' '}
           {participantDebts.length} linked debt{participantDebts.length === 1 ? '' : 's'} it created.
         </p>
+        {deleteError && (
+          <Notice tone="error" role="alert">
+            {deleteError}
+          </Notice>
+        )}
         <Notice tone="warning">
           Delete is only available while the expense is unlocked and you are its creator.
         </Notice>

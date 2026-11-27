@@ -3,6 +3,7 @@ import {
   inviteTokenLookup,
   invitedGroups,
 } from '../data/seedData.js'
+import { request } from './httpClient.js'
 
 function slugify(value) {
   return value
@@ -42,6 +43,24 @@ export function createGroup({ name, description, organizerId }) {
     memberIds: [organizerId],
     createdAt: new Date().toISOString().slice(0, 10),
     inviteToken: Math.random().toString(36).slice(2, 10),
+  }
+}
+
+export async function createGroupInApi({ name, description }) {
+  const result = await request('/groups', {
+    method: 'POST',
+    body: { name: name.trim(), description: description.trim() },
+  })
+  const group = result.group
+  return {
+    id: group.id,
+    name: group.name,
+    description: group.description,
+    currency: 'VND',
+    organizerId: group.creatorId,
+    memberIds: group.memberIds,
+    createdAt: group.createdAt,
+    inviteToken: group.invitation?.joinCode ?? '',
   }
 }
 

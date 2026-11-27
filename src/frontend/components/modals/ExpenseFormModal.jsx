@@ -14,12 +14,13 @@ import { splitEqually } from '../../utils/split.js'
 export default function ExpenseFormModal() {
   const { groupId, expenseId } = useParams()
   const navigate = useNavigate()
-  const { getGroup, expenses, addExpense, updateExpense, currentUserId } = useData()
+  const { getGroup, expenses, addExpense, updateExpense, currentUserId, profile } = useData()
   const group = getGroup(groupId)
   const existing = expenses.find((expense) => expense.id === expenseId)
   const isEditing = Boolean(expenseId)
 
-  const members = getMembers(group?.memberIds)
+  const currentMember = { id: currentUserId, name: profile.displayName }
+  const members = getMembers(group?.memberIds, currentMember)
   const defaultParticipants = existing?.participantIds ?? group?.memberIds ?? []
   const [values, setValues] = useState({
     description: existing?.description ?? '',
@@ -29,6 +30,8 @@ export default function ExpenseFormModal() {
     participantIds: [...defaultParticipants],
   })
   const [errors, setErrors] = useState({})
+  const [submitError, setSubmitError] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
 
   const close = () => navigate(`/groups/${groupId}?tab=expenses`)
 
@@ -67,8 +70,9 @@ export default function ExpenseFormModal() {
     setErrors((current) => ({ ...current, participants: '' }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    setSubmitError('')
     const amount = Number(values.amount)
     const nextErrors = {}
     if (!values.description.trim()) nextErrors.description = 'Add a short description.'
@@ -85,12 +89,25 @@ export default function ExpenseFormModal() {
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
-    if (isEditing) {
-      updateExpense(existing.id, values)
-    } else {
-      addExpense(groupId, values)
+    setIsSaving(true)
+    try {
+      if (isEditing) {
+        await updateExpense(existing.id, values)
+      } else {
+        await addExpense(groupId, values)
+      }
+      close()
+    } catch (error) {
+      const fieldErrors = error.fields ?? {}
+      setErrors((current) => ({
+        ...current,
+        ...fieldErrors,
+        participants: fieldErrors.participantIds ?? current.participants,
+      }))
+      setSubmitError(error.message || 'Could not save this expense. Please try again.')
+    } finally {
+      setIsSaving(false)
     }
-    close()
   }
 
   if (!group) {
@@ -139,13 +156,24 @@ export default function ExpenseFormModal() {
           <Button variant="ghost" onClick={close}>
             Cancel
           </Button>
-          <Button type="submit" form="expense-form" icon={Save}>
+          <Button
+            type="submit"
+            form="expense-form"
+            icon={Save}
+            loading={isSaving}
+            disabled={isSaving}
+          >
             {isEditing ? 'Save changes' : 'Save expense'}
           </Button>
         </>
       }
     >
       <form id="expense-form" onSubmit={handleSubmit} noValidate>
+        {submitError && (
+          <Notice tone="error" role="alert" style={{ marginBottom: 18 }}>
+            {submitError}
+          </Notice>
+        )}
         <div className="expense-layout">
           <div>
             <Field
@@ -292,7 +320,7 @@ export default function ExpenseFormModal() {
                   {remainder > 0 && ', with leftover đồng assigned in member order'}.
                 </p>
                 {values.participantIds.map((memberId) => {
-                  const member = getMember(memberId)
+                  const member = getMember(memberId, currentMember)
                   const extra = remainder > 0 && values.participantIds.indexOf(memberId) < remainder
                   return (
                     <div className="split-preview__line" key={memberId}>

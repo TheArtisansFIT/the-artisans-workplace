@@ -2,16 +2,18 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useAuth } from './AuthContext.jsx'
 import {
   addMember,
-  createGroup as buildGroup,
+  createGroupInApi,
   findGroup,
   listInitialGroups,
 } from '../services/groupService.js'
 import { buildProfile } from '../services/profileService.js'
 import {
-  applyUpdate,
-  buildDebts,
-  createExpense as buildExpense,
+  debtsFromExpense,
+  fetchGroupExpenses,
   listInitialExpenses,
+  removeExpense as deleteExpenseFromApi,
+  saveExpense,
+  saveExpenseChanges,
 } from '../services/expenseService.js'
 import {
   confirmRepayment as confirmDebtRepayment,
@@ -56,6 +58,41 @@ export function DataProvider({ children }) {
     lastSaved.current = { groups, expenses, debts }
   }, [groups, expenses, debts])
 
+  useEffect(() => {
+    if (!user?.id || groups.length === 0) return undefined
+
+    let active = true
+    Promise.all(
+      groups.map(async (group) => {
+        try {
+          return { groupId: group.id, expenses: await fetchGroupExpenses(group.id) }
+        } catch {
+          // A locally seeded group may not exist in the API yet.
+          return null
+        }
+      }),
+    ).then((results) => {
+      if (!active) return
+      const available = results.filter(Boolean)
+      if (available.length === 0) return
+
+      const loadedExpenses = available.flatMap(({ expenses: groupExpenses }) => groupExpenses)
+      const loadedGroupIds = new Set(available.map(({ groupId }) => groupId))
+      setExpenses((current) => [
+        ...loadedExpenses,
+        ...current.filter((expense) => !loadedGroupIds.has(expense.groupId)),
+      ])
+      setDebts((current) => [
+        ...loadedExpenses.flatMap((expense) => debtsFromExpense(expense)),
+        ...current.filter((debt) => !loadedGroupIds.has(debt.groupId)),
+      ])
+    })
+
+    return () => {
+      active = false
+    }
+  }, [groups, user?.id])
+
   const getGroup = useCallback(
     (groupId) => findGroup(groups, groupId),
     [groups],
@@ -67,45 +104,48 @@ export function DataProvider({ children }) {
   )
 
   const createGroup = useCallback(
-    ({ name, description }) => {
-      const group = buildGroup({ name, description, organizerId: currentUserId })
+    async ({ name, description }) => {
+      const group = await createGroupInApi({ name, description })
       setGroups((current) => [...current, group])
       return group
     },
-    [currentUserId],
+    [],
   )
 
   const addExpense = useCallback(
-    (groupId, values) => {
-      const expense = buildExpense({ groupId, values, createdBy: currentUserId })
+    async (groupId, values) => {
+      const expense = await saveExpense(groupId, values)
       setExpenses((current) => [expense, ...current])
-      setDebts((current) => [...buildDebts(expense), ...current])
+      setDebts((current) => [...debtsFromExpense(expense), ...current])
       return expense
     },
-    [currentUserId],
+    [],
   )
 
   const updateExpense = useCallback(
-    (expenseId, values) => {
+    async (expenseId, values) => {
       const existing = expenses.find((expense) => expense.id === expenseId)
       if (!existing) return
 
-      const updated = applyUpdate(existing, values)
+      const updated = await saveExpenseChanges(existing.groupId, expenseId, values)
       setExpenses((current) =>
         current.map((expense) => (expense.id === expenseId ? updated : expense)),
       )
       setDebts((current) => [
-        ...buildDebts(updated),
+        ...debtsFromExpense(updated),
         ...current.filter((debt) => debt.expenseId !== expenseId),
       ])
     },
     [expenses],
   )
 
-  const deleteExpense = useCallback((expenseId) => {
+  const deleteExpense = useCallback(async (expenseId) => {
+    const existing = expenses.find((expense) => expense.id === expenseId)
+    if (!existing) return
+    await deleteExpenseFromApi(existing.groupId, expenseId)
     setExpenses((current) => current.filter((expense) => expense.id !== expenseId))
     setDebts((current) => current.filter((debt) => debt.expenseId !== expenseId))
-  }, [])
+  }, [expenses])
 
   const reportRepayment = useCallback(
     (debtId, values) => {

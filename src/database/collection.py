@@ -143,3 +143,94 @@ group_memberships_validator = {
         }
     }
 }
+
+
+expenses_validator = {
+    "bsonType": "object",
+    "required": [
+        "description",
+        "total_amount",
+        "created_at",
+        "creator_id",
+        "creditor_id",
+        "group_id",
+    ],
+    "properties": {
+        "id": {
+            "bsonType": "string"
+        },
+        "group_id": {
+            "bsonType": "string"
+        },
+        "description": {
+            "bsonType": "string",
+            "maxLength": 120
+        },
+        "total_amount": {
+            "bsonType": "long",
+            "minimum": 1
+        },
+        "date": {
+            "bsonType": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "creditor_id": {
+            "bsonType": "string"
+        },
+        "participant_ids": {
+            "bsonType": "array",
+            "items": {
+                "bsonType": "string"
+            },
+            "minItems": 1
+        },
+        "creator_id": {
+            "bsonType": "string"
+        },
+        "created_at": {
+            "bsonType": "date"
+        },
+        "locked": {
+            "bsonType": "bool"
+        }
+    }
+}
+
+
+repayment_obligations_validator = {
+    "bsonType": "object",
+    "required": [
+        "id",
+        "expense_id",
+        "debtor_id",
+        "creditor_id",
+        "amount",
+        "status",
+        "created_at",
+    ],
+    "properties": {
+        "id": {
+            "bsonType": "string"
+        },
+        "expense_id": {
+            "bsonType": "string"
+        },
+        "debtor_id": {
+            "bsonType": "string"
+        },
+        "creditor_id": {
+            "bsonType": "string"
+        },
+        "amount": {
+            "bsonType": "int",
+            "minimum": 1
+        },
+        "status": {
+            "bsonType": "string",
+            "enum": ["unpaid", "pending", "paid"]
+        },
+        "created_at": {
+            "bsonType": "date"
+        }
+    }
+}
