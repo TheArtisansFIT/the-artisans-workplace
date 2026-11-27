@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from './AuthContext.jsx'
 import {
   addMember,
@@ -27,14 +27,33 @@ const DataContext = createContext(null)
 export function DataProvider({ children }) {
   const { user, saveBankDetails, removeBankDetails } = useAuth()
   const stored = useMemo(readStoredData, [])
-  const [groups, setGroups] = useState(stored?.groups ?? listInitialGroups())
-  const [expenses, setExpenses] = useState(stored?.expenses ?? listInitialExpenses())
-  const [debts, setDebts] = useState(stored?.debts ?? listInitialDebts())
+  const [groups, setGroups] = useState(() => stored?.groups ?? listInitialGroups())
+  const [expenses, setExpenses] = useState(() => stored?.expenses ?? listInitialExpenses())
+  const [debts, setDebts] = useState(() => stored?.debts ?? listInitialDebts())
   const profile = useMemo(() => buildProfile(user), [user])
   const currentUserId = user?.id ?? CURRENT_USER_ID
 
+  // Remember what is already in storage so mounting the provider does not
+  // rewrite the same payload (for example on every page reload).
+  const lastSaved = useRef(
+    stored
+      ? { groups: stored.groups, expenses: stored.expenses, debts: stored.debts }
+      : { groups: [], expenses: [], debts: [] },
+  )
+
   useEffect(() => {
-    writeStoredData({ groups, expenses, debts })
+    const previous = lastSaved.current
+    if (
+      previous.groups === groups &&
+      previous.expenses === expenses &&
+      previous.debts === debts
+    ) {
+      return
+    }
+
+    // Only changed/new records are written; removed records are deleted.
+    writeStoredData({ groups, expenses, debts }, previous)
+    lastSaved.current = { groups, expenses, debts }
   }, [groups, expenses, debts])
 
   const getGroup = useCallback(

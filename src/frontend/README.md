@@ -91,9 +91,12 @@ Authentication, sessions and bank details use the Flask API through
 member and profile behavior is isolated in their respective services; those
 services currently use `data/seedData.js` as a local mock source.
 `context/DataContext.jsx` coordinates UI state and delegates domain operations
-to those services. The working copy is persisted in `localStorage` under
-`splitnest.data.v1` so a refresh does not discard a demo session. To reset the
-demo, clear site data for `localhost:5173`.
+to those services. The working copy is persisted in `localStorage` as one record
+per group, expense and debt under the `splitnest.data.v2.*` keys, so a refresh
+does not discard a demo session and adding one record does not rewrite the
+whole data model. Data saved by older builds under `splitnest.data.v1` is
+migrated automatically. To reset the demo, clear site data for
+`localhost:5173`.
 
 The Vite dev server proxies `/api` to `http://127.0.0.1:5000`. Set
 `VITE_API_BASE_URL` to point at a different API origin. Replace the mock
