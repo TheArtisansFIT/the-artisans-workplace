@@ -287,6 +287,43 @@ def test_delete_expense_rejects_non_creator(
     assert response.status_code == 403
 
 
+def test_create_expense_keeps_zero_share_obligation(client, auth_headers, expense_payload):
+    # 1 dong split between two members: the payer takes the remainder and the
+    # other participant's share is 0, but an obligation is still created.
+    payload = dict(expense_payload, amount=1, paidBy="usr_test")
+    response = create_expense(client, payload, auth_headers)
+    assert response.status_code == 201
+    obligations = response.get_json()["expense"]["obligations"]
+    assert len(obligations) == 1
+    assert obligations[0]["debtorId"] == "usr_other"
+    assert obligations[0]["amount"] == 0
+
+
+def test_mongo_obligation_document_uses_database_schema():
+    obligation = {
+        "id": "obg_test",
+        "expenseId": "exp_test",
+        "debtorId": "usr_debtor",
+        "creditorId": "usr_creditor",
+        "amount": 75000,
+        "status": "unpaid",
+        "createdAt": "2026-10-25T19:42:00+00:00",
+    }
+
+    document = MongoExpenseStore._to_obligation_document(obligation)
+
+    assert document["_id"] == "obg_test"
+    assert document["share_amount"] == 75000
+    assert isinstance(document["share_amount"], Int64)
+    assert document["status"] == "Outstanding"
+    assert "amount" not in document
+    assert "debtor_id" in document and "creditor_id" in document
+
+    restored = MongoExpenseStore._to_obligation(document)
+    assert restored["status"] == "unpaid"
+    assert restored["amount"] == 75000
+
+
 def test_delete_expense_not_found(client, auth_headers):
     response = client.delete(
         "/api/groups/grp_test/expenses/exp_missing", headers=auth_headers

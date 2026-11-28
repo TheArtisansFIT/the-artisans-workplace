@@ -4,51 +4,55 @@ from __future__ import annotations
 
 import re
 import secrets
-from datetime import datetime, timezone
+from datetime import date
 from functools import wraps
 from typing import Any, Callable, TypeVar
 
 from flask import Blueprint, Flask, current_app, g, jsonify, request
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
-from pymongo.errors import DuplicateKeyError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .errors import ApiError, validation_error
-from database.connection import db
+from .store import DuplicateEmailError, UserStore
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
-users = db["users"]
-
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+DEMO_EMAIL = "minh.le@example.com"
+DEMO_PASSWORD = "password123"
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
+def get_store() -> UserStore:
+    return current_app.extensions["user_store"]
+
+
+def public_user(user: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": user["id"],
+        "displayName": user["displayName"],
+        "email": user["email"],
+        "memberSince": user["memberSince"],
+        "bankDetails": user.get("bankDetails"),
+    }
+
+
 def _serializer(app: Flask | None = None) -> URLSafeTimedSerializer:
     flask_app = app or current_app
-    return URLSafeTimedSerializer(
-        flask_app.config["SECRET_KEY"],
-        salt="splitnest-session"
-    )
+    return URLSafeTimedSerializer(flask_app.config["SECRET_KEY"], salt="splitnest-session")
 
 
 def issue_token(app: Flask, user: dict[str, Any]) -> str:
-    return _serializer(app).dumps({
-        "uid": user["_id"]
-    })
+    return _serializer(app).dumps(
+        {"uid": user["id"], "sv": int(user.get("sessionVersion", 0))}
+    )
 
 
 def _json_object() -> dict[str, Any]:
     data = request.get_json(silent=True)
-
     if not isinstance(data, dict):
-        raise ApiError(
-            400,
-            "Send a JSON object in the request body.",
-            "invalid_request"
-        )
-
+        raise ApiError(400, "Send a JSON object in the request body.", "invalid_request")
     return data
 
 
@@ -57,61 +61,25 @@ def _text(data: dict[str, Any], key: str) -> str:
     return value.strip() if isinstance(value, str) else ""
 
 
-def public_user(user: dict[str, Any]) -> dict[str, Any]:
-    bank_details = None
-
-    if user.get("bank_name") or user.get("account_number") or user.get("account_holder"):
-        bank_details = {
-            "bankName": user.get("bank_name"),
-            "accountNumber": user.get("account_number"),
-            "accountHolder": user.get("account_holder")
-        }
-
-    created_at = user["created_at"]
-
-    return {
-        "id": user["_id"],
-        "displayName": user["display_name"],
-        "email": user["email"],
-        "memberSince": created_at.date().isoformat(),
-        "bankDetails": bank_details
-    }
-
-
 def get_current_user() -> dict[str, Any]:
     """Return the authenticated user, or raise a 401 API error."""
 
     header = request.headers.get("Authorization", "")
     scheme, _, token = header.partition(" ")
-
     if scheme.lower() != "bearer" or not token:
         raise ApiError(401, "Sign in to continue.", "unauthorized")
 
     try:
         payload = _serializer().loads(
             token,
-            max_age=int(current_app.config["SESSION_MAX_AGE_SECONDS"])
+            max_age=int(current_app.config["SESSION_MAX_AGE_SECONDS"]),
         )
     except (BadSignature, SignatureExpired):
-        raise ApiError(
-            401,
-            "Your session has expired. Please sign in again.",
-            "unauthorized"
-        )
+        raise ApiError(401, "Your session has expired. Please sign in again.", "unauthorized")
 
-    user_id = payload.get("uid")
-
-    if not isinstance(user_id, str):
-        raise ApiError(401, "Invalid session.", "unauthorized")
-
-    user = users.find_one({"_id": user_id})
-
-    if user is None:
-        raise ApiError(
-            401,
-            "Your session has ended. Please sign in again.",
-            "unauthorized"
-        )
+    user = get_store().find_by_id(str(payload.get("uid", "")))
+    if user is None or int(user.get("sessionVersion", 0)) != int(payload.get("sv", -1)):
+        raise ApiError(401, "Your session has ended. Please sign in again.", "unauthorized")
 
     g.current_user = user
     return user
@@ -129,13 +97,11 @@ def login_required(view: F) -> F:
 @auth_bp.post("/register")
 def register():
     data = _json_object()
-
     display_name = _text(data, "displayName")
     email = _text(data, "email").lower()
     password = data.get("password") if isinstance(data.get("password"), str) else ""
 
     fields: dict[str, str] = {}
-
     if len(display_name) < 2:
         fields["displayName"] = "Enter a display name with at least 2 characters."
     elif len(display_name) > 80:
@@ -144,7 +110,7 @@ def register():
     if not email:
         fields["email"] = "Enter your email address."
     elif len(email) > 254 or not EMAIL_PATTERN.match(email):
-        fields["email"] = "Enter a valid email address."
+        fields["email"] = "Enter a valid email address, for example minh@example.com."
 
     if not password:
         fields["password"] = "Create a password."
@@ -157,65 +123,56 @@ def register():
         raise validation_error(fields)
 
     user = {
-        "_id": f"usr_{secrets.token_hex(8)}",
-        "display_name": display_name,
+        "id": f"usr_{secrets.token_hex(8)}",
+        "displayName": display_name,
         "email": email,
-        "hashed_password": generate_password_hash(password),
-        "created_at": datetime.now(timezone.utc)
+        "passwordHash": generate_password_hash(password),
+        "memberSince": date.today().isoformat(),
+        "bankDetails": None,
+        "sessionVersion": 0,
     }
 
     try:
-        users.insert_one(user)
-    except DuplicateKeyError:
+        stored = get_store().create_user(user)
+    except DuplicateEmailError:
         raise ApiError(
             409,
             "An account with this email already exists. Please sign in instead.",
             "email_taken",
-            {"email": "This email is already registered."}
+            {"email": "This email is already registered."},
         )
 
-    return jsonify(
-        token=issue_token(current_app, user),
-        user=public_user(user)
-    ), 201
+    return (
+        jsonify(token=issue_token(current_app, stored), user=public_user(stored)),
+        201,
+    )
 
 
 @auth_bp.post("/login")
 def login():
     data = _json_object()
-
     email = (_text(data, "email") or _text(data, "identifier")).lower()
     password = data.get("password") if isinstance(data.get("password"), str) else ""
 
     fields: dict[str, str] = {}
-
     if not email:
         fields["email"] = "Enter your email address."
     elif not EMAIL_PATTERN.match(email):
         fields["email"] = "Enter a valid email address."
-
     if not password:
         fields["password"] = "Enter your password."
-
     if fields:
         raise validation_error(fields)
 
-    user = users.find_one({"email": email})
-
-    if user is None or not check_password_hash(
-        user["hashed_password"],
-        password
-    ):
+    user = get_store().find_by_email(email)
+    if user is None or not check_password_hash(user["passwordHash"], password):
         raise ApiError(
             401,
             "Email or password is incorrect. Please try again.",
-            "invalid_credentials"
+            "invalid_credentials",
         )
 
-    return jsonify(
-        token=issue_token(current_app, user),
-        user=public_user(user)
-    )
+    return jsonify(token=issue_token(current_app, user), user=public_user(user))
 
 
 @auth_bp.get("/me")
@@ -227,5 +184,31 @@ def me():
 @auth_bp.post("/logout")
 @login_required
 def logout():
-    # Stateless token: the client must discard its token after logout.
+    user = g.current_user
+    get_store().update_user(
+        user["id"],
+        {"sessionVersion": int(user.get("sessionVersion", 0)) + 1},
+    )
     return jsonify(status="ok")
+
+
+def seed_demo_user(store: UserStore) -> None:
+    """Create the sample account used by the frontend when the store is empty."""
+
+    if store.find_by_email(DEMO_EMAIL) is not None:
+        return
+    store.create_user(
+        {
+            "id": "minh",
+            "displayName": "Minh",
+            "email": DEMO_EMAIL,
+            "passwordHash": generate_password_hash(DEMO_PASSWORD),
+            "memberSince": "2026-10-20",
+            "bankDetails": {
+                "bankName": "Vietcombank",
+                "accountNumber": "0123456789",
+                "accountHolder": "LE QUANG MINH",
+            },
+            "sessionVersion": 0,
+        }
+    )

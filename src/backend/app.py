@@ -1,22 +1,16 @@
 import os
-from pathlib import Path
-from dotenv import load_dotenv
-
-# Load .env from project root
-ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
-load_dotenv(ENV_PATH)
 
 from flask import Flask, Response, jsonify, request
 from pymongo.errors import PyMongoError
 from werkzeug.exceptions import HTTPException
 
-from .auth import auth_bp
+from .auth import auth_bp, seed_demo_user
 from .errors import ApiError
 from .expenses import expenses_bp
 from .groups import groups_bp
+from .invitations import invitations_bp
 from .store import build_expense_store, build_group_store, build_user_store
 from .users import users_bp
-from database.connection import db, ping_server
 
 
 def _split_origins(value: str) -> list[str]:
@@ -30,15 +24,15 @@ def create_app(test_config: dict | None = None) -> Flask:
         SESSION_MAX_AGE_SECONDS=int(
             os.environ.get("SESSION_MAX_AGE_SECONDS", str(60 * 60 * 24 * 7))
         ),
-        MONGO_URI=(
-            os.environ.get("MONGODB_URI")
-            or os.environ.get("MONGO_URI")
-        ),
+        MONGO_URI=os.environ.get("MONGO_URI") or os.environ.get("MONGODB_URI"),
         MONGO_DB_NAME=os.environ.get("MONGO_DB_NAME", "splitnest"),
         GROUP_INVITATION_DURATION_DAYS=int(
             os.environ.get("GROUP_INVITATION_DURATION_DAYS", "7")
         ),
         GROUP_MAX_MEMBER=int(os.environ.get("GROUP_MAX_MEMBER", "50")),
+        PUBLIC_APP_URL=os.environ.get(
+            "PUBLIC_APP_URL", "http://localhost:5173"
+        ),
         USER_STORE=os.environ.get("USER_STORE", "").strip().lower(),
         SEED_DEMO_USER=os.environ.get("SEED_DEMO_USER", "true").lower()
         in {"1", "true", "yes"},
@@ -51,13 +45,7 @@ def create_app(test_config: dict | None = None) -> Flask:
     )
     if test_config:
         app.config.update(test_config)
-    print("MONGO_URI loaded:", bool(app.config.get("MONGO_URI")))
-    print("MONGO_DB_NAME:", app.config.get("MONGO_DB_NAME"))
-    print("USER_STORE:", app.config.get("USER_STORE"))
 
-    print("Actual database:", db.name)
-    if app.config.get("MONGO_URI"):
-        ping_server()
     store = build_user_store(app)
     app.extensions["user_store"] = store
 
@@ -67,9 +55,13 @@ def create_app(test_config: dict | None = None) -> Flask:
     expense_store = build_expense_store(app)
     app.extensions["expense_store"] = expense_store
 
+    if app.config.get("SEED_DEMO_USER"):
+        seed_demo_user(store)
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(groups_bp)
+    app.register_blueprint(invitations_bp)
     app.register_blueprint(expenses_bp)
 
     @app.get("/health")

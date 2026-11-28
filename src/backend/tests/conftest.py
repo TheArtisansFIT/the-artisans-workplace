@@ -1,142 +1,153 @@
-"""Pytest fixtures for the SplitNest backend test suite.
-
-The auth layer reads users straight from ``db["users"]`` (MongoDB). To keep the
-suite running without a MongoDB server we monkeypatch ``backend.auth.users``
-with an in-memory fake collection that resolves users by id.
-"""
-
-from __future__ import annotations
-
 from datetime import datetime, timezone
 
 import pytest
+from flask import Flask
+from flask.testing import FlaskClient
+from werkzeug.security import generate_password_hash
 
 from backend.app import create_app
-import backend.auth as auth_module
-
-
-class FakeUsers:
-    def __init__(self, *users):
-        self.users = {user.get("_id", user.get("id")): dict(user) for user in users}
-
-    def find_one(self, filter):
-        if not isinstance(filter, dict):
-            return None
-        key = filter.get("_id") or filter.get("id")
-        user = self.users.get(key)
-        return dict(user) if user else None
-
-
-TEST_USER = {
-    "_id": "usr_test",
-    "display_name": "Tester",
-    "email": "tester@example.com",
-    "hashed_password": "x",
-    "created_at": datetime(2026, 10, 20, tzinfo=timezone.utc),
-}
-
-OTHER_USER = {
-    "_id": "usr_other",
-    "display_name": "Other",
-    "email": "other@example.com",
-    "hashed_password": "x",
-    "created_at": datetime(2026, 10, 20, tzinfo=timezone.utc),
-}
+from backend.auth import issue_token
 
 
 @pytest.fixture
-def app():
-    app = create_app(
+def app() -> Flask:
+    return create_app(
         {
             "TESTING": True,
-            "USER_STORE": "memory",
-            "MONGO_URI": "",
-            "SECRET_KEY": "test-secret-key",
+            "SECRET_KEY": "test-secret",
+            "SEED_DEMO_USER": False,
+            "MONGO_URI": None,
         }
     )
-    auth_module.users = FakeUsers(TEST_USER, OTHER_USER)
 
-    group_store = app.extensions["group_store"]
+
+@pytest.fixture
+def client(app: Flask) -> FlaskClient:
+    return app.test_client()
+
+
+@pytest.fixture
+def register_user(client: FlaskClient):
+    def _register(
+        display_name: str = "Minh",
+        email: str = "minh@example.com",
+        password: str = "password123",
+    ) -> dict:
+        response = client.post(
+            "/api/auth/register",
+            json={"displayName": display_name, "email": email, "password": password},
+        )
+        assert response.status_code == 201, response.get_json()
+        return response.get_json()
+
+    return _register
+
+
+def auth_header(token: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {token}"}
+
+
+# ---------------------------------------------------------------------------
+# Expense fixtures: a group "grp_test" with two active members, usr_test
+# (organizer) and usr_other (member), seeded directly into the memory stores.
+# ---------------------------------------------------------------------------
+
+TEST_USER_ID = "usr_test"
+OTHER_USER_ID = "usr_other"
+TEST_GROUP_ID = "grp_test"
+
+
+def _seed_user(app: Flask, user_id: str, name: str, email: str) -> None:
+    app.extensions["user_store"].create_user(
+        {
+            "id": user_id,
+            "displayName": name,
+            "email": email,
+            "passwordHash": generate_password_hash("password123"),
+            "memberSince": "2026-10-20",
+            "bankDetails": None,
+            "sessionVersion": 0,
+        }
+    )
+
+
+@pytest.fixture
+def seeded_app(app: Flask) -> Flask:
+    _seed_user(app, TEST_USER_ID, "Tester", "tester@example.com")
+    _seed_user(app, OTHER_USER_ID, "Other", "other@example.com")
+
     now = datetime.now(timezone.utc).isoformat()
+    group_store = app.extensions["group_store"]
     group_store.create_group(
         {
-            "id": "grp_test",
+            "id": TEST_GROUP_ID,
             "name": "Test Group",
             "description": "A group for tests.",
-            "creatorId": TEST_USER["_id"],
-            "memberIds": [TEST_USER["_id"], OTHER_USER["_id"]],
+            "creatorId": TEST_USER_ID,
             "maxMember": 50,
             "createdAt": now,
         },
         {
             "id": "mem_test",
-            "groupId": "grp_test",
-            "userId": TEST_USER["_id"],
+            "groupId": TEST_GROUP_ID,
+            "userId": TEST_USER_ID,
             "role": "Organizer",
             "status": "Active",
             "createdAt": now,
         },
         {
+            "id": "inv_test",
             "joinCode": "code1",
-            "groupId": "grp_test",
+            "groupId": TEST_GROUP_ID,
             "durationDays": 7,
             "createdAt": now,
         },
     )
-    group_store._memberships["mem_other"] = {
-        "id": "mem_other",
-        "groupId": "grp_test",
-        "userId": OTHER_USER["_id"],
-        "role": "Member",
-        "status": "Active",
-        "createdAt": now,
-    }
+    group_store.create_membership(
+        {
+            "id": "mem_other",
+            "groupId": TEST_GROUP_ID,
+            "userId": OTHER_USER_ID,
+            "role": "Member",
+            "status": "Active",
+            "createdAt": now,
+        }
+    )
     return app
 
 
-@pytest.fixture
-def client(app):
-    return app.test_client()
-
-
-@pytest.fixture
-def token(app):
+def _token_for(app: Flask, user_id: str) -> str:
     with app.app_context():
-        from backend.auth import issue_token
-
-        return issue_token(app, TEST_USER)
-
-
-@pytest.fixture
-def other_token(app):
-    with app.app_context():
-        from backend.auth import issue_token
-
-        return issue_token(app, OTHER_USER)
+        user = app.extensions["user_store"].find_by_id(user_id)
+        return issue_token(app, user)
 
 
 @pytest.fixture
-def auth_headers(token):
-    return {"Authorization": f"Bearer {token}"}
+def token(seeded_app: Flask) -> str:
+    return _token_for(seeded_app, TEST_USER_ID)
 
 
 @pytest.fixture
-def other_auth_headers(other_token):
-    return {"Authorization": f"Bearer {other_token}"}
+def other_token(seeded_app: Flask) -> str:
+    return _token_for(seeded_app, OTHER_USER_ID)
 
 
 @pytest.fixture
-def expense_payload():
+def auth_headers(token: str) -> dict[str, str]:
+    return auth_header(token)
+
+
+@pytest.fixture
+def other_auth_headers(other_token: str) -> dict[str, str]:
+    return auth_header(other_token)
+
+
+@pytest.fixture
+def expense_payload() -> dict:
     return {
         "description": "Dinner at B\u00e1nh X\u1ecfo 46A",
         "amount": 150000,
         "date": "2026-10-25",
-        "paidBy": "usr_test",
-        "participantIds": ["usr_test", "usr_other"],
+        "paidBy": TEST_USER_ID,
+        "participantIds": [TEST_USER_ID, OTHER_USER_ID],
     }
-
-
-def create_expense(client, payload, headers):
-    return client.post(
-        "/api/groups/grp_test/expenses", json=payload, headers=headers
-    )

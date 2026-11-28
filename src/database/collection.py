@@ -1,12 +1,7 @@
+
 users_validator = {
     "bsonType": "object",
-    "required": [
-        "_id",
-        "email",
-        "display_name",
-        "hashed_password",
-        "created_at",
-    ],
+    "required": ["_id", "email", "display_name", "hashed_password", "created_at"],
     "properties": {
         "_id": {
             "bsonType": "string"
@@ -18,7 +13,6 @@ users_validator = {
         },
         "display_name": {
             "bsonType": "string",
-            "minLength": 2,
             "maxLength": 100
         },
         "hashed_password": {
@@ -43,22 +37,15 @@ users_validator = {
     }
 }
 
-
 groups_validator = {
     "bsonType": "object",
-    "required": [
-        "_id",
-        "creator_id",
-        "display_name",
-        "max_member",
-        "created_at"
-    ],
+    "required": ["_id", "creator_id", "display_name", "max_member", "created_at"],
     "properties": {
         "_id": {
             "bsonType": "string"
         },
         "creator_id": {
-            "bsonType": "string"
+            "bsonType": "string",
         },
         "display_name": {
             "bsonType": "string",
@@ -78,16 +65,9 @@ groups_validator = {
     }
 }
 
-
 group_invitations_validator = {
     "bsonType": "object",
-    "required": [
-        "_id",
-        "join_code",
-        "group_id",
-        "duration",
-        "created_at"
-    ],
+    "required": ["_id", "join_code", "group_id", "duration", "created_at"],
     "properties": {
         "_id": {
             "bsonType": "string"
@@ -109,17 +89,9 @@ group_invitations_validator = {
     }
 }
 
-
 group_memberships_validator = {
     "bsonType": "object",
-    "required": [
-        "_id",
-        "group_id",
-        "user_id",
-        "role",
-        "status",
-        "created_at"
-    ],
+    "required": ["_id", "group_id", "user_id", "role", "status", "created_at"],
     "properties": {
         "_id": {
             "bsonType": "string"
@@ -143,7 +115,6 @@ group_memberships_validator = {
         }
     }
 }
-
 
 expenses_validator = {
     "bsonType": "object",
@@ -197,7 +168,6 @@ expenses_validator = {
     }
 }
 
-
 repayment_obligations_validator = {
     "bsonType": "object",
     "required": [
@@ -205,7 +175,7 @@ repayment_obligations_validator = {
         "expense_id",
         "debtor_id",
         "creditor_id",
-        "amount",
+        "share_amount",
         "status",
         "created_at",
     ],
@@ -222,16 +192,41 @@ repayment_obligations_validator = {
         "creditor_id": {
             "bsonType": "string"
         },
-        "amount": {
-            "bsonType": "int",
-            "minimum": 1
+        "share_amount": {
+            "bsonType": "long",
+            "minimum": 0
         },
         "status": {
             "bsonType": "string",
-            "enum": ["unpaid", "pending", "paid"]
+            "maxLength": 30,
+            "enum": ["Outstanding", "Pending Confirmation", "Confirmed"]
         },
         "created_at": {
             "bsonType": "date"
+        }
+    }
+}
+
+repayment_reports_validator = {
+    "bsonType": "object",
+    "required": ["expense_id", "debtor_id", "created_at", "status"],
+    "properties": {
+        "expense_id": {
+            "bsonType": "string"
+        },
+        "debtor_id": {
+            "bsonType": "string"
+        },
+        "created_at": {
+            "bsonType": "date"
+        },
+        "decided_at": {
+            "bsonType": "date"
+        },
+        "status": {
+            "bsonType": "string",
+            "maxLength": 20,
+            "enum": ["Pending", "Confirmed", "Rejected"]
         }
     }
 }

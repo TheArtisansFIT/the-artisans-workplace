@@ -15,6 +15,10 @@ class DuplicateEmailError(Exception):
     """Raised when a registration uses an email address that already exists."""
 
 
+class DuplicateMembershipError(Exception):
+    """Raised when a user already has an active membership in a group."""
+
+
 class UserStore(Protocol):
     def find_by_email(self, email: str) -> dict[str, Any] | None: ...
 
@@ -163,42 +167,36 @@ class MongoUserStore:
             raise DuplicateEmailError from exc
         return {**user, "email": document["email"]}
 
-
-def update_user(self, user_id: str, changes: dict[str, Any]) -> dict[str, Any] | None:
-    field_names = { "bankDetails": "bank_details",}
-
-    mongo_changes: dict[str, Any] = {}
-    unset_fields: dict[str, str] = {}
-
-    for key, value in changes.items():
-        mongo_key = field_names.get(key, key)
-
-        if key == "bankDetails" and not value:
-            unset_fields[mongo_key] = ""
-            continue
-
-        if key == "bankDetails" and value:
-            value = {
-                "bank_name": value["bankName"],
-                "account_number": value["accountNumber"],
-                "account_holder": value["accountHolder"],
-            }
-
-        mongo_changes[mongo_key] = value
-
-    update: dict[str, Any] = {}
-
-    if mongo_changes:
-        update["$set"] = mongo_changes
-
-    if unset_fields:
-        update["$unset"] = unset_fields
-
-    if update:
+    def update_user(self, user_id: str, changes: dict[str, Any]) -> dict[str, Any] | None:
+        field_names = {
+            "bankDetails": "bank_details",
+        }
+        mongo_changes: dict[str, Any] = {}
+        unset_fields: dict[str, str] = {}
+        for key, value in changes.items():
+            if key in {"sessionVersion", "session_version"}:
+                # Session versions are runtime auth state, not user data stored in MongoDB.
+                unset_fields["sessionVersion"] = ""
+                unset_fields["session_version"] = ""
+                continue
+            mongo_key = field_names.get(key, key)
+            if key == "bankDetails" and not value:
+                unset_fields[mongo_key] = ""
+                continue
+            if key == "bankDetails" and value:
+                value = {
+                    "bank_name": value["bankName"],
+                    "account_number": value["accountNumber"],
+                    "account_holder": value["accountHolder"],
+                }
+            mongo_changes[mongo_key] = value
+        update: dict[str, Any] = {}
+        if mongo_changes:
+            update["$set"] = mongo_changes
+        if unset_fields:
+            update["$unset"] = unset_fields
         self._users.update_one({"_id": user_id}, update)
-
-    return self.find_by_id(user_id)
-
+        return self.find_by_id(user_id)
 
 
 def build_user_store(app: Flask) -> UserStore:
@@ -228,6 +226,12 @@ class GroupStore(Protocol):
     ) -> dict[str, Any] | None: ...
 
     def find_invitation_for_group(self, group_id: str) -> dict[str, Any] | None: ...
+
+    def find_invitation_by_join_code(self, join_code: str) -> dict[str, Any] | None: ...
+
+    def list_active_memberships(self, group_id: str) -> list[dict[str, Any]]: ...
+
+    def create_membership(self, membership: dict[str, Any]) -> None: ...
 
 
 class MemoryGroupStore:
@@ -263,6 +267,7 @@ class MemoryGroupStore:
                 if (
                     membership["groupId"] == group_id
                     and membership["userId"] == user_id
+                    and membership["status"] == "Active"
                 ):
                     return dict(membership)
         return None
@@ -273,6 +278,45 @@ class MemoryGroupStore:
                 if invitation["groupId"] == group_id:
                     return dict(invitation)
         return None
+
+    def find_invitation_by_join_code(self, join_code: str) -> dict[str, Any] | None:
+        with self._lock:
+            invitation = self._invitations.get(join_code)
+            return dict(invitation) if invitation else None
+
+    def list_active_memberships(self, group_id: str) -> list[dict[str, Any]]:
+        with self._lock:
+            memberships = [
+                dict(membership)
+                for membership in self._memberships.values()
+                if membership["groupId"] == group_id
+                and membership["status"] == "Active"
+            ]
+        return _sort_memberships(memberships)
+
+    def create_membership(self, membership: dict[str, Any]) -> None:
+        with self._lock:
+            if membership["status"] == "Active" and any(
+                existing["groupId"] == membership["groupId"]
+                and existing["userId"] == membership["userId"]
+                and existing["status"] == "Active"
+                for existing in self._memberships.values()
+            ):
+                raise DuplicateMembershipError
+            self._memberships[membership["id"]] = dict(membership)
+
+
+def _sort_memberships(
+    memberships: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return sorted(
+        memberships,
+        key=lambda membership: (
+            0 if membership.get("role") == "Organizer" else 1,
+            membership.get("createdAt", ""),
+            membership.get("id", ""),
+        ),
+    )
 
 
 def _parse_timestamp(value: str) -> datetime:
@@ -296,13 +340,14 @@ class MongoGroupStore:
     def __init__(self, uri: str, database_name: str = "splitnest") -> None:
         try:
             from pymongo import MongoClient
-            from pymongo.errors import OperationFailure
+            from pymongo.errors import DuplicateKeyError, OperationFailure
         except ImportError as exc:  # pragma: no cover - depends on deployment setup
             raise RuntimeError(
                 "MONGO_URI is set but pymongo is not installed. "
                 "Run 'pip install -r src/backend/requirements.txt'."
             ) from exc
 
+        self._duplicate_key_error = DuplicateKeyError
         try:
             self._client = MongoClient(
                 uri,
@@ -473,6 +518,32 @@ class MongoGroupStore:
             self._invitations.find_one({"group_id": group_id})
         )
 
+    def find_invitation_by_join_code(self, join_code: str) -> dict[str, Any] | None:
+        return self._to_invitation(
+            self._invitations.find_one({"join_code": join_code})
+        )
+
+    def list_active_memberships(self, group_id: str) -> list[dict[str, Any]]:
+        documents = self._memberships.find(
+            {"group_id": group_id, "status": "Active"}
+        )
+        memberships = [
+            membership
+            for membership in (
+                self._to_membership(document) for document in documents
+            )
+            if membership is not None
+        ]
+        return _sort_memberships(memberships)
+
+    def create_membership(self, membership: dict[str, Any]) -> None:
+        try:
+            self._memberships.insert_one(
+                self._to_membership_document(membership)
+            )
+        except self._duplicate_key_error as exc:
+            raise DuplicateMembershipError from exc
+
 
 class ExpenseStore(Protocol):
     def create_expense(
@@ -522,8 +593,6 @@ def _build_obligations(
         if member_id == paid_by:
             continue
         share = shares.get(member_id, 0)
-        if share <= 0:
-            continue
         obligations.append(
             {
                 "id": f"obg_{secrets.token_hex(8)}",
@@ -638,6 +707,15 @@ def build_group_store(app: Flask) -> GroupStore:
     )
 
 
+# API obligation status <-> database status (AGENTS.md obligation enums).
+_OBLIGATION_STATUS_TO_DB = {
+    "unpaid": "Outstanding",
+    "pending": "Pending Confirmation",
+    "paid": "Confirmed",
+}
+_OBLIGATION_STATUS_FROM_DB = {db: api for api, db in _OBLIGATION_STATUS_TO_DB.items()}
+
+
 class MongoExpenseStore:
     """MongoDB-backed expense store for the deployed application.
 
@@ -685,8 +763,10 @@ class MongoExpenseStore:
             "expenseId": str(document.get("expense_id", "")),
             "debtorId": str(document.get("debtor_id", "")),
             "creditorId": str(document.get("creditor_id", "")),
-            "amount": int(document.get("amount", 0)),
-            "status": document.get("status", "unpaid"),
+            "amount": int(document.get("share_amount", 0)),
+            "status": _OBLIGATION_STATUS_FROM_DB.get(
+                document.get("status", "Outstanding"), "unpaid"
+            ),
             "createdAt": _iso_timestamp(document.get("created_at")),
         }
 
@@ -712,8 +792,8 @@ class MongoExpenseStore:
             "expense_id": obligation["expenseId"],
             "debtor_id": obligation["debtorId"],
             "creditor_id": obligation["creditorId"],
-            "amount": int(obligation["amount"]),
-            "status": obligation["status"],
+            "share_amount": Int64(obligation["amount"]),
+            "status": _OBLIGATION_STATUS_TO_DB.get(obligation["status"], "Outstanding"),
             "created_at": _parse_timestamp(obligation["createdAt"]),
         }
 

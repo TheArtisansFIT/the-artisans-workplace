@@ -6,7 +6,7 @@ from typing import Any
 
 from flask import Blueprint, g, jsonify, request
 
-from .auth import login_required, public_user, users
+from .auth import get_store, login_required, public_user
 from .errors import ApiError, validation_error
 
 users_bp = Blueprint("users", __name__, url_prefix="/api/users")
@@ -34,13 +34,11 @@ def get_me():
 @login_required
 def save_bank_details():
     data = _json_object()
-
     bank_name = _text(data, "bankName")
     account_number = _text(data, "accountNumber")
     account_holder = _text(data, "accountHolder")
 
     fields: dict[str, str] = {}
-
     if not bank_name:
         fields["bankName"] = "Enter the bank name."
     elif len(bank_name) > 100:
@@ -59,21 +57,16 @@ def save_bank_details():
     if fields:
         raise validation_error(fields)
 
-    result = users.update_one(
-        {"_id": g.current_user["_id"]},
-        {
-            "$set": {
-                "bank_name": bank_name,
-                "account_number": account_number,
-                "account_holder": account_holder
-            }
+    changes = {
+        "bankDetails": {
+            "bankName": bank_name,
+            "accountNumber": account_number,
+            "accountHolder": account_holder,
         }
-    )
-
-    if result.matched_count == 0:
+    }
+    user = get_store().update_user(g.current_user["id"], changes)
+    if user is None:
         raise ApiError(404, "Account not found.", "not_found")
-
-    user = users.find_one({"_id": g.current_user["_id"]})
 
     return jsonify(user=public_user(user))
 
@@ -81,20 +74,8 @@ def save_bank_details():
 @users_bp.delete("/me/bank-details")
 @login_required
 def remove_bank_details():
-    result = users.update_one(
-        {"_id": g.current_user["_id"]},
-        {
-            "$unset": {
-                "bank_name": "",
-                "account_number": "",
-                "account_holder": ""
-            }
-        }
-    )
-
-    if result.matched_count == 0:
+    user = get_store().update_user(g.current_user["id"], {"bankDetails": None})
+    if user is None:
         raise ApiError(404, "Account not found.", "not_found")
-
-    user = users.find_one({"_id": g.current_user["_id"]})
 
     return jsonify(user=public_user(user))
