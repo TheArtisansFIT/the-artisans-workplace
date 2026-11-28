@@ -1,7 +1,11 @@
+
 users_validator = {
     "bsonType": "object",
-    "required": ["email", "display_name", "hashed_password", "created_at"],
+    "required": ["_id", "email", "display_name", "hashed_password", "created_at"],
     "properties": {
+        "_id": {
+            "bsonType": "string"
+        },
         "email": {
             "bsonType": "string",
             "maxLength": 255,
@@ -35,8 +39,11 @@ users_validator = {
 
 groups_validator = {
     "bsonType": "object",
-    "required": ["creator_id", "display_name", "max_member", "created_at"],
+    "required": ["_id", "creator_id", "display_name", "max_member", "created_at"],
     "properties": {
+        "_id": {
+            "bsonType": "string"
+        },
         "creator_id": {
             "bsonType": "string",
         },
@@ -59,9 +66,12 @@ groups_validator = {
 }
 
 group_invitations_validator = {
-    "bsonType": "object", 
-    "required": ["join_code", "group_id", "duration", "created_at"],
+    "bsonType": "object",
+    "required": ["_id", "join_code", "group_id", "duration", "created_at"],
     "properties": {
+        "_id": {
+            "bsonType": "string"
+        },
         "join_code": {
             "bsonType": "string",
             "maxLength": 15
@@ -81,8 +91,11 @@ group_invitations_validator = {
 
 group_memberships_validator = {
     "bsonType": "object",
-    "required": ["group_id", "user_id", "role", "status", "created_at"],
+    "required": ["_id", "group_id", "user_id", "role", "status", "created_at"],
     "properties": {
+        "_id": {
+            "bsonType": "string"
+        },
         "group_id": {
             "bsonType": "string"
         },
@@ -105,49 +118,91 @@ group_memberships_validator = {
 
 expenses_validator = {
     "bsonType": "object",
-    "required": ["description", "total_amount", "created_at", "creator_id", "creditor_id", "group_id"],
+    "required": [
+        "_id",
+        "description",
+        "total_amount",
+        "created_at",
+        "creator_id",
+        "creditor_id",
+        "group_id",
+    ],
     "properties": {
+        "_id": {
+            "bsonType": "string"
+        },
+        "group_id": {
+            "bsonType": "string"
+        },
         "description": {
             "bsonType": "string",
-            "maxLength": 255
+            "maxLength": 120
         },
         "total_amount": {
             "bsonType": "long",
             "minimum": 1
         },
-        "created_at": {
-            "bsonType": "date"
-        },
-        "creator_id": {
-            "bsonType": "string"
+        "date": {
+            "bsonType": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
         },
         "creditor_id": {
             "bsonType": "string"
         },
-        "group_id": {
+        "participant_ids": {
+            "bsonType": "array",
+            "items": {
+                "bsonType": "string"
+            },
+            "minItems": 1
+        },
+        "creator_id": {
             "bsonType": "string"
+        },
+        "created_at": {
+            "bsonType": "date"
+        },
+        "locked": {
+            "bsonType": "bool"
         }
     }
 }
 
 repayment_obligations_validator = {
     "bsonType": "object",
-    "required": ["expense_id", "debtor_id", "share_amount", "status"],
+    "required": [
+        "_id",
+        "expense_id",
+        "debtor_id",
+        "creditor_id",
+        "share_amount",
+        "status",
+        "created_at",
+    ],
     "properties": {
+        "_id": {
+            "bsonType": "string"
+        },
         "expense_id": {
             "bsonType": "string"
         },
         "debtor_id": {
             "bsonType": "string"
         },
+        "creditor_id": {
+            "bsonType": "string"
+        },
         "share_amount": {
             "bsonType": "long",
-            "minimum": 1
+            "minimum": 0
         },
         "status": {
             "bsonType": "string",
             "maxLength": 30,
             "enum": ["Outstanding", "Pending Confirmation", "Confirmed"]
+        },
+        "created_at": {
+            "bsonType": "date"
         }
     }
 }
@@ -175,4 +230,3 @@ repayment_reports_validator = {
         }
     }
 }
-

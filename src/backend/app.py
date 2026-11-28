@@ -6,9 +6,10 @@ from werkzeug.exceptions import HTTPException
 
 from .auth import auth_bp, seed_demo_user
 from .errors import ApiError
+from .expenses import expenses_bp
 from .groups import groups_bp
 from .invitations import invitations_bp
-from .store import build_group_store, build_user_store
+from .store import build_expense_store, build_group_store, build_user_store
 from .users import users_bp
 
 
@@ -51,6 +52,9 @@ def create_app(test_config: dict | None = None) -> Flask:
     group_store = build_group_store(app)
     app.extensions["group_store"] = group_store
 
+    expense_store = build_expense_store(app)
+    app.extensions["expense_store"] = expense_store
+
     if app.config.get("SEED_DEMO_USER"):
         seed_demo_user(store)
 
@@ -58,6 +62,7 @@ def create_app(test_config: dict | None = None) -> Flask:
     app.register_blueprint(users_bp)
     app.register_blueprint(groups_bp)
     app.register_blueprint(invitations_bp)
+    app.register_blueprint(expenses_bp)
 
     @app.get("/health")
     def health() -> Response:

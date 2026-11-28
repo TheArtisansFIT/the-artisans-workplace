@@ -248,6 +248,66 @@ Only `Active` memberships appear, and emails are included but never bank details
 }
 ```
 
+## Expense API (UC-09 to UC-11)
+
+The expense endpoints let group members record shared expenses, view an
+expense's details with each participant's share and repayment obligation, and
+edit or delete an expense while it remains unlocked. Expenses are stored in the
+`expenses` collection and each non-payer participant's share is stored as a
+repayment obligation in the `repayment_obligations` collection. Amounts are
+whole VND and are split equally, with leftover đồng assigned one by one in
+participant order. A participant with a zero share still gets an obligation.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/groups/<group_id>/expenses` | Record a shared expense (UC-09) |
+| `GET` | `/api/groups/<group_id>/expenses` | List a group's expenses |
+| `GET` | `/api/groups/<group_id>/expenses/<expense_id>` | View expense details (UC-10) |
+| `PUT` | `/api/groups/<group_id>/expenses/<expense_id>` | Edit an expense (UC-11) |
+| `DELETE` | `/api/groups/<group_id>/expenses/<expense_id>` | Delete an expense (UC-11) |
+
+The create request accepts a required `description` (up to 120 characters),
+`amount` (whole đồng greater than 0), `date` (YYYY-MM-DD), `paidBy` (a group
+member), and `participantIds` (at least one group member). Only active members
+can read or record expenses. The response includes the expense and its
+repayment obligations:
+
+```json
+{
+  "expense": {
+    "id": "exp_…",
+    "groupId": "grp_…",
+    "description": "Dinner at Bánh Xèo 46A",
+    "amount": 150000,
+    "date": "2026-10-25",
+    "paidBy": "usr_…",
+    "participantIds": ["usr_…", "usr_…"],
+    "createdBy": "usr_…",
+    "createdAt": "2026-10-25T19:42:00+00:00",
+    "locked": false,
+    "obligations": [
+      {
+        "id": "obg_…",
+        "expenseId": "exp_…",
+        "debtorId": "usr_…",
+        "creditorId": "usr_…",
+        "amount": 75000,
+        "status": "unpaid",
+        "createdAt": "2026-10-25T19:42:00+00:00"
+      }
+    ]
+  }
+}
+```
+
+An expense can only be edited or deleted by its creator, and only while it is
+unlocked (no repayment request exists for it). Protected routes expect
+`Authorization: Bearer <token>`.
+
+In MongoDB, obligation statuses are stored as `Outstanding`, `Pending
+Confirmation`, and `Confirmed`; the API maps them to `unpaid`, `pending`, and
+`paid`.
+
 ## Data model note
 
 Application-generated identifiers are strings (`usr_...`, `grp_...`, and so

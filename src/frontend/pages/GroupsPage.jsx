@@ -77,7 +77,7 @@ export default function GroupsPage() {
         <div className="group-grid">
           {myGroups.map((group) => {
             const balance = personalBalance(debts, group.id, currentUserId)
-            const groupMembers = getMembers(group.memberIds)
+            const groupMembers = getMembers(group.memberIds, { id: user.id, name: user.name })
             const total = groupTotal(expenses, group.id)
             const expenseCount = expenses.filter((expense) => expense.groupId === group.id).length
 
