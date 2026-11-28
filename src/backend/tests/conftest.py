@@ -17,17 +17,18 @@ import backend.auth as auth_module
 
 class FakeUsers:
     def __init__(self, *users):
-        self.users = {user["id"]: dict(user) for user in users}
+        self.users = {user.get("_id", user.get("id")): dict(user) for user in users}
 
     def find_one(self, filter):
         if not isinstance(filter, dict):
             return None
-        user = self.users.get(filter.get("id"))
+        key = filter.get("_id") or filter.get("id")
+        user = self.users.get(key)
         return dict(user) if user else None
 
 
 TEST_USER = {
-    "id": "usr_test",
+    "_id": "usr_test",
     "display_name": "Tester",
     "email": "tester@example.com",
     "hashed_password": "x",
@@ -35,7 +36,7 @@ TEST_USER = {
 }
 
 OTHER_USER = {
-    "id": "usr_other",
+    "_id": "usr_other",
     "display_name": "Other",
     "email": "other@example.com",
     "hashed_password": "x",
@@ -62,15 +63,15 @@ def app():
             "id": "grp_test",
             "name": "Test Group",
             "description": "A group for tests.",
-            "creatorId": TEST_USER["id"],
-            "memberIds": [TEST_USER["id"], OTHER_USER["id"]],
+            "creatorId": TEST_USER["_id"],
+            "memberIds": [TEST_USER["_id"], OTHER_USER["_id"]],
             "maxMember": 50,
             "createdAt": now,
         },
         {
             "id": "mem_test",
             "groupId": "grp_test",
-            "userId": TEST_USER["id"],
+            "userId": TEST_USER["_id"],
             "role": "Organizer",
             "status": "Active",
             "createdAt": now,
@@ -85,7 +86,7 @@ def app():
     group_store._memberships["mem_other"] = {
         "id": "mem_other",
         "groupId": "grp_test",
-        "userId": OTHER_USER["id"],
+        "userId": OTHER_USER["_id"],
         "role": "Member",
         "status": "Active",
         "createdAt": now,

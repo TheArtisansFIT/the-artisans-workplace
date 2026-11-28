@@ -133,7 +133,6 @@ class MongoUserStore:
         member_since = date.fromisoformat(user["memberSince"])
         document: dict[str, Any] = {
             "_id": user["id"],
-            "id": user["id"],
             "display_name": user["displayName"],
             "email": user["email"].strip().lower(),
             "hashed_password": user["passwordHash"],
@@ -401,7 +400,6 @@ class MongoGroupStore:
     def _to_group_document(group: dict[str, Any]) -> dict[str, Any]:
         return {
             "_id": group["id"],
-            "id": group["id"],
             "creator_id": group["creatorId"],
             "display_name": group["name"],
             "description": group.get("description", ""),
@@ -413,7 +411,6 @@ class MongoGroupStore:
     def _to_membership_document(membership: dict[str, Any]) -> dict[str, Any]:
         return {
             "_id": membership["id"],
-            "id": membership["id"],
             "group_id": membership["groupId"],
             "user_id": membership["userId"],
             "role": membership["role"],
@@ -424,7 +421,7 @@ class MongoGroupStore:
     @staticmethod
     def _to_invitation_document(invitation: dict[str, Any]) -> dict[str, Any]:
         return {
-            "id": invitation["id"],
+            "_id": invitation["id"],
             "join_code": invitation["joinCode"],
             "group_id": invitation["groupId"],
             "duration": int(invitation["durationDays"]),
@@ -697,7 +694,6 @@ class MongoExpenseStore:
     def _to_expense_document(expense: dict[str, Any]) -> dict[str, Any]:
         return {
             "_id": expense["id"],
-            "id": expense["id"],
             "group_id": expense["groupId"],
             "description": expense["description"],
             "total_amount": Int64(expense["amount"]),
@@ -713,7 +709,6 @@ class MongoExpenseStore:
     def _to_obligation_document(obligation: dict[str, Any]) -> dict[str, Any]:
         return {
             "_id": obligation["id"],
-            "id": obligation["id"],
             "expense_id": obligation["expenseId"],
             "debtor_id": obligation["debtorId"],
             "creditor_id": obligation["creditorId"],

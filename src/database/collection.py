@@ -1,14 +1,14 @@
 users_validator = {
     "bsonType": "object",
     "required": [
-        "id",
+        "_id",
         "email",
         "display_name",
         "hashed_password",
         "created_at",
     ],
     "properties": {
-        "id": {
+        "_id": {
             "bsonType": "string"
         },
         "email": {
@@ -47,14 +47,14 @@ users_validator = {
 groups_validator = {
     "bsonType": "object",
     "required": [
-        "id",
+        "_id",
         "creator_id",
         "display_name",
         "max_member",
         "created_at"
     ],
     "properties": {
-        "id": {
+        "_id": {
             "bsonType": "string"
         },
         "creator_id": {
@@ -82,14 +82,14 @@ groups_validator = {
 group_invitations_validator = {
     "bsonType": "object",
     "required": [
-        "id",
+        "_id",
         "join_code",
         "group_id",
         "duration",
         "created_at"
     ],
     "properties": {
-        "id": {
+        "_id": {
             "bsonType": "string"
         },
         "join_code": {
@@ -113,7 +113,7 @@ group_invitations_validator = {
 group_memberships_validator = {
     "bsonType": "object",
     "required": [
-        "id",
+        "_id",
         "group_id",
         "user_id",
         "role",
@@ -121,7 +121,7 @@ group_memberships_validator = {
         "created_at"
     ],
     "properties": {
-        "id": {
+        "_id": {
             "bsonType": "string"
         },
         "group_id": {
@@ -148,6 +148,7 @@ group_memberships_validator = {
 expenses_validator = {
     "bsonType": "object",
     "required": [
+        "_id",
         "description",
         "total_amount",
         "created_at",
@@ -156,7 +157,7 @@ expenses_validator = {
         "group_id",
     ],
     "properties": {
-        "id": {
+        "_id": {
             "bsonType": "string"
         },
         "group_id": {
@@ -200,7 +201,7 @@ expenses_validator = {
 repayment_obligations_validator = {
     "bsonType": "object",
     "required": [
-        "id",
+        "_id",
         "expense_id",
         "debtor_id",
         "creditor_id",
@@ -209,7 +210,7 @@ repayment_obligations_validator = {
         "created_at",
     ],
     "properties": {
-        "id": {
+        "_id": {
             "bsonType": "string"
         },
         "expense_id": {

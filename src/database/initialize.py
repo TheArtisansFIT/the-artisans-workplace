@@ -54,9 +54,7 @@ if __name__ == "__main__":
         if name.endswith("_validator"):
             cname = name.removesuffix("_validator")
             create_collection(cname, value)
-
-    # Users
-    db.users.create_index("id", unique=True)
+    # Users (_id là primary key, đã được MongoDB index tự động; không cần index riêng trên "id")
     db.users.create_index("email", unique=True)
 
     # Groups

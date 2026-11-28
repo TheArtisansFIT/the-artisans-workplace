@@ -173,7 +173,7 @@ def _public_expense(
 def create_expense(group_id: str):
     """UC-09: Record a shared expense."""
     user = g.current_user
-    group, member_ids = _validate_membership(group_id, user["id"])
+    group, member_ids = _validate_membership(group_id, user["_id"])
 
     data = _json_object()
     values = _validate_expense_input(data, member_ids, partial=False)
@@ -190,7 +190,7 @@ def create_expense(group_id: str):
         "date": values["date"],
         "paidBy": values["paidBy"],
         "participantIds": list(values["participantIds"]),
-        "createdBy": user["id"],
+        "createdBy": user["_id"],
         "createdAt": created_at,
         "locked": False,
     }
@@ -208,7 +208,7 @@ def create_expense(group_id: str):
 def list_expenses(group_id: str):
     """List a group's expenses (supports UC-09 / UC-10 reading)."""
     user = g.current_user
-    _validate_membership(group_id, user["id"])
+    _validate_membership(group_id, user["_id"])
 
     expenses = get_expense_store().list_expenses(group_id)
     return jsonify(expenses=[_public_expense(expense) for expense in expenses])
@@ -219,7 +219,7 @@ def list_expenses(group_id: str):
 def get_expense(group_id: str, expense_id: str):
     """UC-10: View expense details."""
     user = g.current_user
-    _validate_membership(group_id, user["id"])
+    _validate_membership(group_id, user["_id"])
 
     expense = get_expense_store().find_expense(expense_id)
     if expense is None or expense["groupId"] != group_id:
@@ -234,13 +234,13 @@ def get_expense(group_id: str, expense_id: str):
 def update_expense(group_id: str, expense_id: str):
     """UC-11: Edit an expense."""
     user = g.current_user
-    group, member_ids = _validate_membership(group_id, user["id"])
+    group, member_ids = _validate_membership(group_id, user["_id"])
 
     expense = get_expense_store().find_expense(expense_id)
     if expense is None or expense["groupId"] != group_id:
         raise ApiError(404, "Expense not found.", "not_found")
 
-    if expense["createdBy"] != user["id"]:
+    if expense["createdBy"] != user["_id"]:
         raise ApiError(403, "Only the expense creator can edit it.", "forbidden")
     if expense.get("locked"):
         raise ApiError(409, "This expense is locked and cannot be edited.", "conflict")
@@ -271,13 +271,13 @@ def update_expense(group_id: str, expense_id: str):
 def delete_expense(group_id: str, expense_id: str):
     """UC-11: Delete an expense."""
     user = g.current_user
-    _validate_membership(group_id, user["id"])
+    _validate_membership(group_id, user["_id"])
 
     expense = get_expense_store().find_expense(expense_id)
     if expense is None or expense["groupId"] != group_id:
         raise ApiError(404, "Expense not found.", "not_found")
 
-    if expense["createdBy"] != user["id"]:
+    if expense["createdBy"] != user["_id"]:
         raise ApiError(403, "Only the expense creator can delete it.", "forbidden")
     if expense.get("locked"):
         raise ApiError(409, "This expense is locked and cannot be deleted.", "conflict")

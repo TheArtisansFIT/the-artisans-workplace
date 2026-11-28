@@ -40,6 +40,8 @@ def test_mongo_expense_document_uses_database_schema():
     assert document["creator_id"] == "usr_creator"
     assert document["creditor_id"] == "usr_creditor"
     assert document["group_id"] == "grp_test"
+    assert document["_id"] == "exp_test"
+    assert "id" not in document
     assert "amount" not in document
     assert "created_by" not in document
     assert "paid_by" not in document
@@ -74,9 +76,12 @@ def test_mongo_group_documents_include_validator_ids():
     membership_document = MongoGroupStore._to_membership_document(membership)
     invitation_document = MongoGroupStore._to_invitation_document(invitation)
 
-    assert group_document["id"] == group_document["_id"] == "grp_test"
-    assert membership_document["id"] == membership_document["_id"] == "mem_test"
-    assert invitation_document["id"] == "inv_test"
+    assert group_document["_id"] == "grp_test"
+    assert "id" not in group_document
+    assert membership_document["_id"] == "mem_test"
+    assert "id" not in membership_document
+    assert invitation_document["_id"] == "inv_test"
+    assert "id" not in invitation_document
 
 
 def test_create_expense_uc09(client, auth_headers, expense_payload):
