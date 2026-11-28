@@ -101,6 +101,7 @@ def create_group():
         "createdAt": created_at,
     }
     invitation = {
+        "id": f"inv_{secrets.token_hex(8)}",
         "joinCode": secrets.token_hex(5),
         "groupId": group_id,
         "durationDays": duration_days,

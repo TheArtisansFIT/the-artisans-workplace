@@ -9,7 +9,7 @@ UC-11 Edit / Delete expense        -> PUT  /api/groups/<group_id>/expenses/<expe
 import pytest
 from bson.int64 import Int64
 
-from backend.store import MongoExpenseStore
+from backend.store import MongoExpenseStore, MongoGroupStore
 
 
 def create_expense(client, payload, headers):
@@ -43,6 +43,40 @@ def test_mongo_expense_document_uses_database_schema():
     assert "amount" not in document
     assert "created_by" not in document
     assert "paid_by" not in document
+
+
+def test_mongo_group_documents_include_validator_ids():
+    group = {
+        "id": "grp_test",
+        "name": "Test group",
+        "description": "",
+        "creatorId": "usr_test",
+        "maxMember": 50,
+        "createdAt": "2026-10-25T19:42:00+00:00",
+    }
+    membership = {
+        "id": "mem_test",
+        "groupId": "grp_test",
+        "userId": "usr_test",
+        "role": "Organizer",
+        "status": "Active",
+        "createdAt": "2026-10-25T19:42:00+00:00",
+    }
+    invitation = {
+        "id": "inv_test",
+        "joinCode": "abc123",
+        "groupId": "grp_test",
+        "durationDays": 7,
+        "createdAt": "2026-10-25T19:42:00+00:00",
+    }
+
+    group_document = MongoGroupStore._to_group_document(group)
+    membership_document = MongoGroupStore._to_membership_document(membership)
+    invitation_document = MongoGroupStore._to_invitation_document(invitation)
+
+    assert group_document["id"] == group_document["_id"] == "grp_test"
+    assert membership_document["id"] == membership_document["_id"] == "mem_test"
+    assert invitation_document["id"] == "inv_test"
 
 
 def test_create_expense_uc09(client, auth_headers, expense_payload):

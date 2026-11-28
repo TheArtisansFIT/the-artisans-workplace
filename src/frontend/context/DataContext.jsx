@@ -5,6 +5,7 @@ import {
   createGroupInApi,
   findGroup,
   listInitialGroups,
+  removeMember,
 } from '../services/groupService.js'
 import { buildProfile } from '../services/profileService.js'
 import {
@@ -14,6 +15,8 @@ import {
   removeExpense as deleteExpenseFromApi,
   saveExpense,
   saveExpenseChanges,
+  createExpense,
+  applyUpdate,
 } from '../services/expenseService.js'
 import {
   confirmRepayment as confirmDebtRepayment,
@@ -34,6 +37,7 @@ export function DataProvider({ children }) {
   const [debts, setDebts] = useState(() => stored?.debts ?? listInitialDebts())
   const profile = useMemo(() => buildProfile(user), [user])
   const currentUserId = user?.id ?? CURRENT_USER_ID
+  const [apiGroupIds, setApiGroupIds] = useState(new Set())
 
   // Remember what is already in storage so mounting the provider does not
   // rewrite the same payload (for example on every page reload).
@@ -62,12 +66,12 @@ export function DataProvider({ children }) {
     if (!user?.id || groups.length === 0) return undefined
 
     let active = true
+    const apiGroups = groups.filter((group) => apiGroupIds.has(group.id))
     Promise.all(
-      groups.map(async (group) => {
+      apiGroups.map(async (group) => {
         try {
           return { groupId: group.id, expenses: await fetchGroupExpenses(group.id) }
         } catch {
-          // A locally seeded group may not exist in the API yet.
           return null
         }
       }),
@@ -91,7 +95,7 @@ export function DataProvider({ children }) {
     return () => {
       active = false
     }
-  }, [groups, user?.id])
+  }, [groups, user?.id, apiGroupIds])
 
   const getGroup = useCallback(
     (groupId) => findGroup(groups, groupId),
@@ -107,6 +111,7 @@ export function DataProvider({ children }) {
     async ({ name, description }) => {
       const group = await createGroupInApi({ name, description })
       setGroups((current) => [...current, group])
+      setApiGroupIds((current) => new Set(current).add(group.id))
       return group
     },
     [],
@@ -114,12 +119,20 @@ export function DataProvider({ children }) {
 
   const addExpense = useCallback(
     async (groupId, values) => {
-      const expense = await saveExpense(groupId, values)
+      const isApiGroup = apiGroupIds.has(groupId)
+      if (isApiGroup) {
+        const expense = await saveExpense(groupId, values)
+        setExpenses((current) => [expense, ...current])
+        setDebts((current) => [...debtsFromExpense(expense), ...current])
+        return expense
+      }
+      // Nhóm cục bộ/seed: lưu trực tiếp vào state, không gọi API
+      const expense = createExpense({ groupId, values, createdBy: currentUserId })
       setExpenses((current) => [expense, ...current])
       setDebts((current) => [...debtsFromExpense(expense), ...current])
       return expense
     },
-    [],
+    [expenses, apiGroupIds, currentUserId],
   )
 
   const updateExpense = useCallback(
@@ -127,25 +140,41 @@ export function DataProvider({ children }) {
       const existing = expenses.find((expense) => expense.id === expenseId)
       if (!existing) return
 
-      const updated = await saveExpenseChanges(existing.groupId, expenseId, values)
-      setExpenses((current) =>
-        current.map((expense) => (expense.id === expenseId ? updated : expense)),
-      )
-      setDebts((current) => [
-        ...debtsFromExpense(updated),
-        ...current.filter((debt) => debt.expenseId !== expenseId),
-      ])
+      const isApiGroup = apiGroupIds.has(existing.groupId)
+      if (isApiGroup) {
+        const updated = await saveExpenseChanges(existing.groupId, expenseId, values)
+        setExpenses((current) =>
+          current.map((expense) => (expense.id === expenseId ? updated : expense)),
+        )
+        setDebts((current) => [
+          ...debtsFromExpense(updated),
+          ...current.filter((debt) => debt.expenseId !== expenseId),
+        ])
+      } else {
+        const updated = applyUpdate(existing, values)
+        setExpenses((current) =>
+          current.map((expense) => (expense.id === expenseId ? updated : expense)),
+        )
+        setDebts((current) => [
+          ...debtsFromExpense(updated),
+          ...current.filter((debt) => debt.expenseId !== expenseId),
+        ])
+      }
     },
-    [expenses],
+    [expenses, apiGroupIds],
   )
 
   const deleteExpense = useCallback(async (expenseId) => {
     const existing = expenses.find((expense) => expense.id === expenseId)
     if (!existing) return
-    await deleteExpenseFromApi(existing.groupId, expenseId)
+
+    const isApiGroup = apiGroupIds.has(existing.groupId)
+    if (isApiGroup) {
+      await deleteExpenseFromApi(existing.groupId, expenseId)
+    }
     setExpenses((current) => current.filter((expense) => expense.id !== expenseId))
     setDebts((current) => current.filter((debt) => debt.expenseId !== expenseId))
-  }, [expenses])
+  }, [expenses, apiGroupIds])
 
   const reportRepayment = useCallback(
     (debtId, values) => {
@@ -192,6 +221,17 @@ export function DataProvider({ children }) {
     [currentUserId],
   )
 
+  const removeMemberFromGroup = useCallback(
+    (groupId, memberId) => {
+      setGroups((current) =>
+        current.map((group) =>
+          group.id === groupId ? removeMember(group, memberId) : group,
+        ),
+      )
+    },
+    [],
+  )
+
   const value = useMemo(
     () => ({
       currentUserId,
@@ -205,10 +245,12 @@ export function DataProvider({ children }) {
       addExpense,
       updateExpense,
       deleteExpense,
+      apiGroupIds,
       reportRepayment,
       confirmRepayment,
       rejectRepayment,
       joinGroup,
+      removeMemberFromGroup,
       saveBankDetails,
       removeBankDetails,
     }),
@@ -224,10 +266,12 @@ export function DataProvider({ children }) {
       addExpense,
       updateExpense,
       deleteExpense,
+      apiGroupIds,
       reportRepayment,
       confirmRepayment,
       rejectRepayment,
       joinGroup,
+      removeMemberFromGroup,
       saveBankDetails,
       removeBankDetails,
     ],

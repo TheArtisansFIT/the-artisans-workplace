@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Pencil, Trash2 } from 'lucide-react'
 import Avatar from '../ui/Avatar.jsx'
 import Badge from '../ui/Badge.jsx'
@@ -15,6 +15,7 @@ export default function ExpenseDetailsModal() {
   const { groupId, expenseId } = useParams()
   const navigate = useNavigate()
   const { getGroup, expenses, debts, deleteExpense, currentUserId, profile } = useData()
+  const currentMember = { id: currentUserId, name: profile?.displayName ?? currentUserId }
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleteError, setDeleteError] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -107,7 +108,7 @@ export default function ExpenseDetailsModal() {
         <div>
           <h3>{expense.description}</h3>
           <p>
-            Paid by {expense.paidBy === currentUserId ? 'you' : payer?.name ?? 'a member'} ·{' '}
+            Paid by {expense.paidBy === currentUserId ? 'you' : payer?.name ?? expense.paidBy} ·{' '}
             {expense.participantIds.length} participants
           </p>
         </div>
@@ -122,10 +123,11 @@ export default function ExpenseDetailsModal() {
             </Button>
           ) : (
             <Button
-              as={Link}
-              to={`/groups/${groupId}/expenses/${expense.id}/edit`}
               variant="outline"
               icon={Pencil}
+              onClick={() =>
+                navigate(`/groups/${groupId}/expenses/${expense.id}/edit`)
+              }
             >
               Edit
             </Button>
@@ -153,7 +155,7 @@ export default function ExpenseDetailsModal() {
           </thead>
           <tbody>
             {expense.participantIds.map((memberId) => {
-              const member = getMember(memberId)
+              const member = getMember(memberId, currentMember)
               const debt = participantDebts.find((item) => item.from === memberId)
               const isPayer = memberId === expense.paidBy
               const meta = debt ? debtStatusMeta(debt.status) : null
@@ -164,14 +166,14 @@ export default function ExpenseDetailsModal() {
                     <div className="person">
                       <Avatar member={member} size="sm" />
                       <span className="member-name">
-                        {member?.name ?? 'Member'}
+                        {member?.name ?? memberId}
                         {memberId === currentUserId && <span className="you">(you)</span>}
                       </span>
                     </div>
                   </td>
                   <td className="amount">{formatVND(debt?.amount ?? equalShare)}</td>
                   <td>
-                    {isPayer ? 'Payer' : debt ? `Owes ${payer?.name ?? 'the payer'}` : 'No debt recorded'}
+                    {isPayer ? 'Payer' : debt ? `Owes ${payer?.name ?? expense.paidBy}` : 'No debt recorded'}
                   </td>
                   <td>
                     {isPayer ? (

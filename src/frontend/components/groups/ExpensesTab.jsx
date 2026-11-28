@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Plus, ReceiptText } from 'lucide-react'
 import Avatar from '../ui/Avatar.jsx'
 import Button from '../ui/Button.jsx'
@@ -8,8 +8,12 @@ import StatCard from '../ui/StatCard.jsx'
 import { getMember } from '../../services/memberService.js'
 import { formatDate, formatVND } from '../../utils/format.js'
 import { groupExpenses, groupTotal, personalBalance, userShare } from '../../utils/selectors.js'
+import { useData } from '../../context/DataContext.jsx'
 
 export default function ExpensesTab({ group, expenses, debts, currentUserId, memberCount }) {
+  const navigate = useNavigate()
+  const { profile } = useData()
+  const currentMember = { id: currentUserId, name: profile?.displayName ?? currentUserId }
   const list = groupExpenses(expenses, group.id)
   const total = groupTotal(expenses, group.id)
   const yourShare = list.reduce((sum, expense) => sum + userShare(expense, currentUserId), 0)
@@ -37,7 +41,14 @@ export default function ExpensesTab({ group, expenses, debts, currentUserId, mem
               title="No expenses recorded yet"
               description="Add the first shared cost and SplitNest will work out everyone’s equal share."
               action={
-                <Button as={Link} to={`/groups/${group.id}/expenses/new`} icon={Plus}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    navigate(`/groups/${group.id}/expenses/new`)
+                  }
+                  icon={Plus}
+                >
                   Add expense
                 </Button>
               }
@@ -53,20 +64,16 @@ export default function ExpensesTab({ group, expenses, debts, currentUserId, mem
                     <th>Participants</th>
                     <th>Your share</th>
                     <th>Total</th>
+                    <th style={{ width: 170 }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {list.map((expense) => {
-                    const payer = getMember(expense.paidBy)
+                    const payer = getMember(expense.paidBy, currentMember)
                     return (
                       <tr key={expense.id}>
                         <td>
-                          <Link
-                            className="table__link"
-                            to={`/groups/${group.id}/expenses/${expense.id}`}
-                          >
-                            {expense.description}
-                          </Link>
+                          <span className="table__link">{expense.description}</span>
                           {expense.locked && (
                             <div className="table__sub">Locked by a repayment request</div>
                           )}
@@ -76,7 +83,7 @@ export default function ExpensesTab({ group, expenses, debts, currentUserId, mem
                           <div className="person">
                             <Avatar member={payer} size="sm" />
                             <span style={{ fontSize: 12 }}>
-                              {expense.paidBy === currentUserId ? 'You' : payer?.name ?? 'Member'}
+                              {expense.paidBy === currentUserId ? 'You' : payer?.name ?? expense.paidBy}
                             </span>
                           </div>
                         </td>
@@ -88,6 +95,47 @@ export default function ExpensesTab({ group, expenses, debts, currentUserId, mem
                         </td>
                         <td className="amount">{formatVND(userShare(expense, currentUserId))}</td>
                         <td className="amount">{formatVND(expense.amount)}</td>
+                        <td>
+                          <div
+                            className="table__actions"
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'row',
+                              flexWrap: 'nowrap',
+                              gap: 6,
+                            }}
+                          >
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                navigate(
+                                  `/groups/${group.id}/expenses/${expense.id}`
+                                )
+                              }
+                            >
+                              View
+                            </Button>
+                            {!expense.locked && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  navigate(
+                                    `/groups/${group.id}/expenses/${expense.id}/edit`
+                                  )
+                                }
+                              >
+                                Edit
+                              </Button>
+                            )}
+                            {expense.locked && (
+                              <Button variant="outline" size="sm" disabled>
+                                Edit
+                              </Button>
+                            )}
+                          </div>
+                        </td>
                       </tr>
                     )
                   })}

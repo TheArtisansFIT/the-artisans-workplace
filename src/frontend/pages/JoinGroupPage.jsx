@@ -63,7 +63,7 @@ export default function JoinGroupPage() {
                 <strong>{group.name}</strong>
                 <span>
                   Private group · {group.memberIds.length} members · Invited by{' '}
-                  {getMember(group.organizerId)?.name ?? 'a member'}
+                  {getMember(group.organizerId)?.name ?? group.organizerId}
                 </span>
               </div>
             </div>

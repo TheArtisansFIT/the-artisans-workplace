@@ -7,6 +7,12 @@ export function listInitialExpenses() {
   return initialExpenses
 }
 
+function normalizeExpense(expense) {
+  if (!expense) return expense
+  const { _id, ...rest } = expense
+  return { id: rest.id ?? _id, ...rest }
+}
+
 function normalizeValues(values) {
   return {
     description: values.description.trim(),
@@ -46,7 +52,7 @@ function toDebt(obligation, expense) {
 
 export async function fetchGroupExpenses(groupId) {
   const result = await request(`/groups/${encodeURIComponent(groupId)}/expenses`)
-  return result.expenses ?? []
+  return (result.expenses ?? []).map(normalizeExpense)
 }
 
 export async function saveExpense(groupId, values) {
@@ -54,7 +60,7 @@ export async function saveExpense(groupId, values) {
     `/groups/${encodeURIComponent(groupId)}/expenses`,
     { method: 'POST', body: toApiValues(values) },
   )
-  return result.expense
+  return normalizeExpense(result.expense)
 }
 
 export async function saveExpenseChanges(groupId, expenseId, values) {
@@ -62,7 +68,7 @@ export async function saveExpenseChanges(groupId, expenseId, values) {
     `/groups/${encodeURIComponent(groupId)}/expenses/${encodeURIComponent(expenseId)}`,
     { method: 'PUT', body: toApiValues(values) },
   )
-  return result.expense
+  return normalizeExpense(result.expense)
 }
 
 export async function removeExpense(groupId, expenseId) {

@@ -12,7 +12,7 @@ export function getMember(memberId, fallbackMember) {
   if (fallbackMember?.id === memberId) {
     return { ...fallbackMember, color: fallbackMember.color ?? '#5a4a87' }
   }
-  return { id: memberId, name: memberId, color: '#5a4a87' }
+  return { id: memberId, name: 'Thành viên', color: '#5a4a87' }
 }
 
 export function getMembers(memberIds = [], fallbackMember) {

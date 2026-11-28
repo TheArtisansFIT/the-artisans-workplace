@@ -68,3 +68,20 @@ export function addMember(group, memberId) {
   if (group.memberIds.includes(memberId)) return group
   return { ...group, memberIds: [...group.memberIds, memberId] }
 }
+
+export function removeMember(group, memberId) {
+  if (!group.memberIds.includes(memberId)) return group
+  return {
+    ...group,
+    memberIds: group.memberIds.filter((id) => id !== memberId),
+  }
+}
+
+export function setMemberRole(group, memberId, role) {
+  // role is informational in the local mock; the organizerId is the source of truth
+  if (role === 'Organizer') {
+    return { ...group, organizerId: memberId }
+  }
+  // If demoting the current organizer, keep organizerId unchanged unless another organizer exists
+  return group
+}

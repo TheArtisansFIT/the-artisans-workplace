@@ -325,7 +325,7 @@ export default function ExpenseFormModal() {
                   return (
                     <div className="split-preview__line" key={memberId}>
                       <span>
-                        {member?.name ?? 'Member'}
+                        {member?.name ?? member.id}
                         {memberId === currentUserId ? ' (you)' : ''}
                         {extra && <span className="split-preview__tag">+1 VND</span>}
                       </span>
