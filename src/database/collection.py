@@ -1,14 +1,14 @@
 users_validator = {
     "bsonType": "object",
     "required": [
-        "id",
+        "_id",
         "email",
         "display_name",
         "hashed_password",
         "created_at",
     ],
     "properties": {
-        "id": {
+        "_id": {
             "bsonType": "string"
         },
         "email": {
@@ -47,14 +47,14 @@ users_validator = {
 groups_validator = {
     "bsonType": "object",
     "required": [
-        "id",
+        "_id",
         "creator_id",
         "display_name",
         "max_member",
         "created_at"
     ],
     "properties": {
-        "id": {
+        "_id": {
             "bsonType": "string"
         },
         "creator_id": {
@@ -82,14 +82,14 @@ groups_validator = {
 group_invitations_validator = {
     "bsonType": "object",
     "required": [
-        "id",
+        "_id",
         "join_code",
         "group_id",
         "duration",
         "created_at"
     ],
     "properties": {
-        "id": {
+        "_id": {
             "bsonType": "string"
         },
         "join_code": {
@@ -113,7 +113,7 @@ group_invitations_validator = {
 group_memberships_validator = {
     "bsonType": "object",
     "required": [
-        "id",
+        "_id",
         "group_id",
         "user_id",
         "role",
@@ -121,7 +121,7 @@ group_memberships_validator = {
         "created_at"
     ],
     "properties": {
-        "id": {
+        "_id": {
             "bsonType": "string"
         },
         "group_id": {
@@ -137,6 +137,98 @@ group_memberships_validator = {
         "status": {
             "bsonType": "string",
             "enum": ["Active", "Left", "Removed"]
+        },
+        "created_at": {
+            "bsonType": "date"
+        }
+    }
+}
+
+
+expenses_validator = {
+    "bsonType": "object",
+    "required": [
+        "_id",
+        "description",
+        "total_amount",
+        "created_at",
+        "creator_id",
+        "creditor_id",
+        "group_id",
+    ],
+    "properties": {
+        "_id": {
+            "bsonType": "string"
+        },
+        "group_id": {
+            "bsonType": "string"
+        },
+        "description": {
+            "bsonType": "string",
+            "maxLength": 120
+        },
+        "total_amount": {
+            "bsonType": "long",
+            "minimum": 1
+        },
+        "date": {
+            "bsonType": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "creditor_id": {
+            "bsonType": "string"
+        },
+        "participant_ids": {
+            "bsonType": "array",
+            "items": {
+                "bsonType": "string"
+            },
+            "minItems": 1
+        },
+        "creator_id": {
+            "bsonType": "string"
+        },
+        "created_at": {
+            "bsonType": "date"
+        },
+        "locked": {
+            "bsonType": "bool"
+        }
+    }
+}
+
+
+repayment_obligations_validator = {
+    "bsonType": "object",
+    "required": [
+        "_id",
+        "expense_id",
+        "debtor_id",
+        "creditor_id",
+        "amount",
+        "status",
+        "created_at",
+    ],
+    "properties": {
+        "_id": {
+            "bsonType": "string"
+        },
+        "expense_id": {
+            "bsonType": "string"
+        },
+        "debtor_id": {
+            "bsonType": "string"
+        },
+        "creditor_id": {
+            "bsonType": "string"
+        },
+        "amount": {
+            "bsonType": "int",
+            "minimum": 1
+        },
+        "status": {
+            "bsonType": "string",
+            "enum": ["unpaid", "pending", "paid"]
         },
         "created_at": {
             "bsonType": "date"

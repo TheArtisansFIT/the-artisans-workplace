@@ -60,7 +60,7 @@ def save_bank_details():
         raise validation_error(fields)
 
     result = users.update_one(
-        {"id": g.current_user["id"]},
+        {"_id": g.current_user["_id"]},
         {
             "$set": {
                 "bank_name": bank_name,
@@ -73,7 +73,7 @@ def save_bank_details():
     if result.matched_count == 0:
         raise ApiError(404, "Account not found.", "not_found")
 
-    user = users.find_one({"id": g.current_user["id"]})
+    user = users.find_one({"_id": g.current_user["_id"]})
 
     return jsonify(user=public_user(user))
 
@@ -82,7 +82,7 @@ def save_bank_details():
 @login_required
 def remove_bank_details():
     result = users.update_one(
-        {"id": g.current_user["id"]},
+        {"_id": g.current_user["_id"]},
         {
             "$unset": {
                 "bank_name": "",
@@ -95,6 +95,6 @@ def remove_bank_details():
     if result.matched_count == 0:
         raise ApiError(404, "Account not found.", "not_found")
 
-    user = users.find_one({"id": g.current_user["id"]})
+    user = users.find_one({"_id": g.current_user["_id"]})
 
     return jsonify(user=public_user(user))

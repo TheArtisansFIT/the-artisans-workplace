@@ -88,19 +88,20 @@ def create_group():
         "id": group_id,
         "name": name,
         "description": description,
-        "creatorId": user["id"],
+        "creatorId": user["_id"],
         "maxMember": int(current_app.config["GROUP_MAX_MEMBER"]),
         "createdAt": created_at,
     }
     membership = {
         "id": f"mem_{secrets.token_hex(8)}",
         "groupId": group_id,
-        "userId": user["id"],
+        "userId": user["_id"],
         "role": "Organizer",
         "status": "Active",
         "createdAt": created_at,
     }
     invitation = {
+        "id": f"inv_{secrets.token_hex(8)}",
         "joinCode": secrets.token_hex(5),
         "groupId": group_id,
         "durationDays": duration_days,

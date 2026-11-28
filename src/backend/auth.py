@@ -35,7 +35,7 @@ def _serializer(app: Flask | None = None) -> URLSafeTimedSerializer:
 
 def issue_token(app: Flask, user: dict[str, Any]) -> str:
     return _serializer(app).dumps({
-        "uid": user["id"]
+        "uid": user["_id"]
     })
 
 
@@ -70,7 +70,7 @@ def public_user(user: dict[str, Any]) -> dict[str, Any]:
     created_at = user["created_at"]
 
     return {
-        "id": user["id"],
+        "id": user["_id"],
         "displayName": user["display_name"],
         "email": user["email"],
         "memberSince": created_at.date().isoformat(),
@@ -104,7 +104,7 @@ def get_current_user() -> dict[str, Any]:
     if not isinstance(user_id, str):
         raise ApiError(401, "Invalid session.", "unauthorized")
 
-    user = users.find_one({"id": user_id})
+    user = users.find_one({"_id": user_id})
 
     if user is None:
         raise ApiError(
@@ -157,7 +157,7 @@ def register():
         raise validation_error(fields)
 
     user = {
-        "id": f"usr_{secrets.token_hex(8)}",
+        "_id": f"usr_{secrets.token_hex(8)}",
         "display_name": display_name,
         "email": email,
         "hashed_password": generate_password_hash(password),

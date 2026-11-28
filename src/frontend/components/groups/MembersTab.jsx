@@ -1,21 +1,28 @@
 import { useState } from 'react'
-import { Check, Copy, Link2, Share2, UsersRound } from 'lucide-react'
+import { Check, Copy, Link2, Share2, Trash2, UsersRound } from 'lucide-react'
 import Avatar from '../ui/Avatar.jsx'
 import Badge from '../ui/Badge.jsx'
 import Button from '../ui/Button.jsx'
+import Modal from '../ui/Modal.jsx'
 import Notice from '../ui/Notice.jsx'
 import QrPlaceholder from '../ui/QrPlaceholder.jsx'
 import { getMember, getMembers } from '../../services/memberService.js'
 import { formatDate, formatVND } from '../../utils/format.js'
 import { groupExpenses } from '../../utils/selectors.js'
+import { useData } from '../../context/DataContext.jsx'
 
 export default function MembersTab({ group, expenses, currentUserId }) {
+  const { removeMemberFromGroup, profile } = useData()
   const [copied, setCopied] = useState(false)
   const [shared, setShared] = useState('')
+  const [removing, setRemoving] = useState(null)
+  const [removeError, setRemoveError] = useState('')
+  const currentMember = { id: currentUserId, name: profile?.displayName ?? currentUserId }
   const inviteUrl = `${window.location.origin}/join/${group.inviteToken}`
-  const groupMembers = getMembers(group.memberIds)
+  const groupMembers = getMembers(group.memberIds, currentMember)
   const list = groupExpenses(expenses, group.id)
   const total = list.reduce((sum, expense) => sum + expense.amount, 0)
+  const isOrganizer = group.organizerId === currentUserId
 
   const copyLink = async () => {
     try {
@@ -45,6 +52,40 @@ export default function MembersTab({ group, expenses, currentUserId }) {
     await copyLink()
   }
 
+  const handleRemove = async (memberId) => {
+    setRemoveError('')
+    setRemoving(memberId)
+    try {
+      await removeMemberFromGroup(group.id, memberId)
+      setRemoving(null)
+    } catch (error) {
+      setRemoving(null)
+      setRemoveError(error.message || 'Could not remove this member. Please try again.')
+    }
+  }
+
+  const canRemove = (memberId) => {
+    // A member can always remove themselves.
+    if (memberId === currentUserId) return true
+    // Only the organizer can remove other members.
+    if (!isOrganizer) return false
+    // Cannot remove the organizer.
+    if (memberId === group.organizerId) return false
+    // Cannot remove the last member.
+    if (groupMembers.length <= 1) return false
+    return true
+  }
+
+  if (removeError) {
+    return (
+      <Modal title="Remove member" onClose={() => setRemoveError('')}>
+        <Notice tone="error" role="alert">
+          {removeError}
+        </Notice>
+      </Modal>
+    )
+  }
+
   return (
     <>
       <div className="group-panels">
@@ -56,6 +97,7 @@ export default function MembersTab({ group, expenses, currentUserId }) {
                 <th>Email</th>
                 <th>Role</th>
                 <th>Joined</th>
+                {isOrganizer && <th style={{ width: 120 }}>Action</th>}
               </tr>
             </thead>
             <tbody>
@@ -77,6 +119,35 @@ export default function MembersTab({ group, expenses, currentUserId }) {
                     </Badge>
                   </td>
                   <td>{formatDate(member.joinedAt ?? group.createdAt)}</td>
+                  {isOrganizer && (
+                    <td>
+                      <div className="table__actions">
+                        {member.id === currentUserId ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRemove(member.id)}
+                            disabled={removing === member.id}
+                            loading={removing === member.id}
+                            icon={Trash2}
+                          >
+                            Leave
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRemove(member.id)}
+                            disabled={!canRemove(member.id) || removing === member.id}
+                            loading={removing === member.id}
+                            icon={Trash2}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -98,7 +169,7 @@ export default function MembersTab({ group, expenses, currentUserId }) {
             </div>
             <div className="summary-row">
               <span>Created by</span>
-              <strong>{getMember(group.organizerId)?.name ?? 'Member'}</strong>
+              <strong>{getMember(group.organizerId)?.name ?? group.organizerId}</strong>
             </div>
             <div className="summary-row">
               <span>Created on</span>
